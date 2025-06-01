@@ -1,21 +1,40 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { HealthController } from './health.controller';
+import { UserController } from './controllers/user.controller';
+import { UserService } from './services/user.service';
+import { UserRepository } from './repositories/user.repository';
+import { PrismaService } from './services/prisma.service';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      url: process.env.DATABASE_URL,
-      autoLoadEntities: true,
-      synchronize: true,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
     }),
+
+    // TypeOrmModule.forRootAsync({
+    //   imports: [ConfigModule],
+    //   useFactory: (configService: ConfigService) => ({
+    //     type: 'postgres',
+    //     url: process.env.DATABASE_URL,
+    //     autoLoadEntities: true,
+    //     entities: [User],
+    //     synchronize:
+    //       configService.get('NODE_ENV', 'development') !== 'production',
+    //     logging: configService.get('NODE_ENV', 'development') === 'development',
+    //     ssl:
+    //       configService.get('NODE_ENV') === 'production'
+    //         ? { rejectUnauthorized: false }
+    //         : false,
+    //     name: 'default',
+    //   }),
+    // }),
+
+    // TypeOrmModule.forFeature([User]),
   ],
-  controllers: [AppController, HealthController],
-  providers: [AppService],
+  controllers: [UserController, HealthController],
+  providers: [PrismaService, UserService, UserRepository],
+  exports: [UserService, PrismaService],
 })
 export class AppModule {}
