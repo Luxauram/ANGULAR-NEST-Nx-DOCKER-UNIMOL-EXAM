@@ -1,27 +1,27 @@
 {
-  "name": "social-network-db-project",
+  "name": "frontend",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "prefix": "app",
-  "sourceRoot": "apps/social-network-db-project/src",
+  "sourceRoot": "apps/frontend/src",
   "tags": [],
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:browser",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/social-network-db-project",
-        "index": "apps/social-network-db-project/src/index.html",
-        "main": "apps/social-network-db-project/src/main.ts",
+        "outputPath": "dist/apps/frontend",
+        "index": "apps/frontend/src/index.html",
+        "main": "apps/frontend/src/main.ts",
         "polyfills": ["zone.js"],
-        "tsConfig": "apps/social-network-db-project/tsconfig.app.json",
+        "tsConfig": "apps/frontend/tsconfig.app.json",
         "assets": [
           {
             "glob": "**/*",
-            "input": "apps/social-network-db-project/public"
+            "input": "apps/frontend/public"
           }
         ],
-        "styles": ["apps/social-network-db-project/src/styles.css"],
+        "styles": ["apps/frontend/src/styles.css"],
         "scripts": []
       },
       "configurations": {
@@ -56,10 +56,10 @@
       "executor": "@angular-devkit/build-angular:dev-server",
       "configurations": {
         "production": {
-          "buildTarget": "social-network-db-project:build:production"
+          "buildTarget": "frontend:build:production"
         },
         "development": {
-          "buildTarget": "social-network-db-project:build:development"
+          "buildTarget": "frontend:build:development"
         }
       },
       "defaultConfiguration": "development"
@@ -67,7 +67,7 @@
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "buildTarget": "social-network-db-project:build"
+        "buildTarget": "frontend:build"
       }
     },
     "lint": {
@@ -77,7 +77,7 @@
       "continuous": true,
       "executor": "@nx/web:file-server",
       "options": {
-        "buildTarget": "social-network-db-project:build",
+        "buildTarget": "frontend:build",
         "spa": true
       }
     }

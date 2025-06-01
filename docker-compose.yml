@@ -1,0 +1,174 @@
+services:
+  # PostgreSQL per User Service
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: userdb
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U admin -d userdb']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MongoDB per Post Service
+  mongodb:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Neo4j per Social Graph Service
+  neo4j:
+    image: neo4j:5
+    environment:
+      NEO4J_AUTH: neo4j/password
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_default__listen__address: 0.0.0.0
+      NEO4J_dbms_default__advertised__address: neo4j
+      NEO4J_dbms_connector_bolt_listen__address: 0.0.0.0:7687
+      NEO4J_dbms_connector_http_listen__address: 0.0.0.0:7474
+    ports:
+      - '7687:7687'
+      - '7474:7474'
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ['CMD', 'cypher-shell', '-u', 'neo4j', '-p', 'password', 'RETURN 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Redis per Feed Service
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nest.js - Api Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
+    ports:
+      - '${API_GATEWAY_PORT:-3000}:3000'
+    environment:
+      - API_GATEWAY_PORT=${API_GATEWAY_PORT:-3000}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://admin:password@postgres:5432/userdb}
+      - MONGODB_URL=${MONGODB_URL:-mongodb://admin:password@mongodb:27017/postdb?authSource=admin}
+      - NEO4J_HOST=neo4j
+      - NEO4J_PORT=7687
+      - NEO4J_USERNAME=neo4j
+      - NEO4J_PASSWORD=password
+      - NEO4J_URL=bolt://neo4j:password@neo4j:7687
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: on-failure
+
+  # Nest.js - User Service
+  user-service:
+    build:
+      context: .
+      dockerfile: apps/user-service/Dockerfile
+    ports:
+      - '${USER_SERVICE_PORT:-3001}:3001'
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://admin:password@postgres:5432/userdb}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  # Nest.js - Post Service
+  post-service:
+    build:
+      context: .
+      dockerfile: apps/post-service/Dockerfile
+    ports:
+      - '${POST_SERVICE_PORT:-3002}:3002'
+    environment:
+      - MONGODB_URL=${MONGODB_URL:-mongodb://admin:password@mongodb:27017/postdb?authSource=admin}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: on-failure
+
+  # Nest.js - Feed Service
+  feed-service:
+    build:
+      context: .
+      dockerfile: apps/feed-service/Dockerfile
+    ports:
+      - '${FEED_SERVICE_PORT:-3003}:3003'
+    environment:
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: on-failure
+
+  # Nest.js - Social Graph Service
+  social-graph-service:
+    build:
+      context: .
+      dockerfile: apps/social-graph-service/Dockerfile
+    ports:
+      - '${SOCIAL_GRAPH_SERVICE_PORT:-3004}:3004'
+    environment:
+      - NEO4J_HOST=neo4j
+      - NEO4J_PORT=7687
+      - NEO4J_USERNAME=neo4j
+      - NEO4J_PASSWORD=password
+      - NEO4J_URL=bolt://neo4j:password@neo4j:7687
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    restart: on-failure
+
+  # Angular - Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    ports:
+      - '${FRONTEND_PORT:-80}:80'
+    depends_on:
+      api-gateway:
+        condition: service_started
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  neo4j_data:
+  redis_data:
