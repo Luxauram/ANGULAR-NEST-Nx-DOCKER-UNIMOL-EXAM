@@ -12,26 +12,6 @@ import { PrismaService } from './services/prisma.service';
       isGlobal: true,
       envFilePath: '.env',
     }),
-
-    // TypeOrmModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   useFactory: (configService: ConfigService) => ({
-    //     type: 'postgres',
-    //     url: process.env.DATABASE_URL,
-    //     autoLoadEntities: true,
-    //     entities: [User],
-    //     synchronize:
-    //       configService.get('NODE_ENV', 'development') !== 'production',
-    //     logging: configService.get('NODE_ENV', 'development') === 'development',
-    //     ssl:
-    //       configService.get('NODE_ENV') === 'production'
-    //         ? { rejectUnauthorized: false }
-    //         : false,
-    //     name: 'default',
-    //   }),
-    // }),
-
-    // TypeOrmModule.forFeature([User]),
   ],
   controllers: [UserController, HealthController],
   providers: [PrismaService, UserService, UserRepository],
