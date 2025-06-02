@@ -267,4 +267,28 @@ export class UserService {
       activeUsers: totalUsers, // Il count già filtra per isActive: true
     };
   }
+
+  /**
+   * Valida email e password utente
+   */
+  async validateUser(email: string, password: string): Promise<any> {
+    try {
+      const user = await this.userRepository.findByEmail(email);
+
+      if (!user) {
+        return null;
+      }
+
+      // Per semplicità universitaria, confronto diretto
+      // In produzione useresti bcrypt
+      if (user.passwordHash === password) {
+        return user;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error validating user:', error);
+      return null;
+    }
+  }
 }

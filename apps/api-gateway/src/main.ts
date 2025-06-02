@@ -6,30 +6,51 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  try {
+    const app = await NestFactory.create(AppModule, {
+      logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    });
 
-  app.enableCors({
-    origin: ['http://localhost:4200'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      })
+    );
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    })
-  );
+    app.enableCors({
+      origin: process.env.FRONTEND_URL || 'http://localhost:4200',
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+    });
 
-  const globalPrefix = 'api';
-  app.setGlobalPrefix(globalPrefix);
+    const globalPrefix = 'api';
+    app.setGlobalPrefix(globalPrefix);
 
-  app.enableCors();
+    const port = process.env.API_GATEWAY_PORT || 3000;
+    await app.listen(port);
 
-  const port = process.env.API_GATEWAY_PORT || 3000;
-  await app.listen(port);
-  Logger.log(`🚀 API Gateway running on http://localhost:${port}`);
+    Logger.log(`🚀 API Gateway running on http://localhost:${port}`);
+    Logger.log(`📊 Health check: http://localhost:${port}/api/health`);
+    Logger.log(
+      `🌐 Environment: ${
+        process.env.NODE_ENV === 'production' ? 'Production' : 'Development'
+      } mode`
+    );
+    Logger.log(
+      `🔗 CORS enabled for: ${
+        process.env.FRONTEND_URL || 'http://localhost:4200'
+      }`
+    );
+  } catch (error) {
+    Logger.error('❌ Failed to start API Gateway:', error);
+    process.exit(1);
+  }
 }
 
 bootstrap();

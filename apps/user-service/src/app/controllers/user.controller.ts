@@ -11,6 +11,7 @@ import {
   ValidationPipe,
   HttpStatus,
   HttpCode,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -94,5 +95,37 @@ export class UserController {
   @Delete(':id/hard')
   async hardDeleteUser(@Param('id') id: string) {
     return await this.userService.hardRemove(id);
+  }
+
+  /**
+   * POST /auth/validate
+   * Valida le credenziali utente (per API Gateway)
+   */
+  @Post('auth/validate')
+  async validateUser(@Body() validateDto: { email: string; password: string }) {
+    console.log('🔍 Validating credentials for:', validateDto.email);
+
+    try {
+      const user = await this.userService.validateUser(
+        validateDto.email,
+        validateDto.password
+      );
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      // Ritorna i dati utente (senza password)
+      return {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        fullName: user.fullName,
+        createdAt: user.createdAt,
+      };
+    } catch (error) {
+      console.error('Validation error:', error);
+      throw new UnauthorizedException('Invalid credentials');
+    }
   }
 }
