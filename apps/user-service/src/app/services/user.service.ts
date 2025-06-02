@@ -271,23 +271,27 @@ export class UserService {
   /**
    * Valida email e password utente
    */
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(
+    email: string,
+    password: string
+  ): Promise<UserResponse | null> {
     try {
       const user = await this.userRepository.findByEmail(email);
 
-      if (!user) {
+      if (!user || !user.isActive) {
         return null;
       }
 
-      // Per semplicità universitaria, confronto diretto
-      // In produzione useresti bcrypt
-      if (user.passwordHash === password) {
-        return user;
+      // Usa bcrypt per confrontare la password (invece del confronto diretto)
+      const isValid = await bcrypt.compare(password, user.passwordHash);
+
+      if (!isValid) {
+        return null;
       }
 
-      return null;
+      return toUserResponse(user);
     } catch (error) {
-      console.error('Error validating user:', error);
+      this.logger.error('Error validating user:', error);
       return null;
     }
   }

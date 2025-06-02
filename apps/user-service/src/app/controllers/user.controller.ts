@@ -39,9 +39,22 @@ export class UserController {
     return await this.userService.findAll(pageNum, limitNum);
   }
 
-  // GET /users/search?q=query - Cerca utenti
+  // ------------------------------------------------------------------------
+  // IMPORTANTE: Le rotte specifiche DEVONO essere prima della rotta parametrica /:id
+  // ------------------------------------------------------------------------
+
+  // GET /users/search?q=query - Cerca utenti (usando query parameter)
   @Get('search')
   async searchUsers(@Query('q') query: string) {
+    if (!query) {
+      return [];
+    }
+    return await this.userService.search(query);
+  }
+
+  // GET /users/search/:query - Cerca utenti (usando path parameter per compatibilità con API Gateway)
+  @Get('search/:query')
+  async searchUsersByPath(@Param('query') query: string) {
     if (!query) {
       return [];
     }
@@ -64,16 +77,49 @@ export class UserController {
     };
   }
 
-  // GET /users/:id - Trova utente per ID
-  @Get(':id')
-  async findUserById(@Param('id') id: string) {
-    return await this.userService.findById(id);
-  }
-
   // GET /users/username/:username - Trova utente per username
   @Get('username/:username')
   async findUserByUsername(@Param('username') username: string) {
     return await this.userService.findByUsername(username);
+  }
+
+  // POST /users/auth/validate - Valida le credenziali utente (per API Gateway)
+  @Post('auth/validate')
+  async validateUser(@Body() validateDto: { email: string; password: string }) {
+    console.log('🔍 Validating credentials for:', validateDto.email);
+
+    try {
+      const user = await this.userService.verifyPassword(
+        validateDto.email,
+        validateDto.password
+      );
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      // Ritorna i dati utente (senza password)
+      return {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        fullName: user.fullName,
+        createdAt: user.createdAt,
+      };
+    } catch (error) {
+      console.error('Validation error:', error);
+      throw new UnauthorizedException('Invalid credentials');
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  // IMPORTANTE: Le rotte specifiche DEVONO essere prima della rotta parametrica /:id
+  // ------------------------------------------------------------------------
+
+  // GET /users/:id - Trova utente per ID
+  @Get(':id')
+  async findUserById(@Param('id') id: string) {
+    return await this.userService.findById(id);
   }
 
   // PUT /users/:id - Aggiorna utente
@@ -95,37 +141,5 @@ export class UserController {
   @Delete(':id/hard')
   async hardDeleteUser(@Param('id') id: string) {
     return await this.userService.hardRemove(id);
-  }
-
-  /**
-   * POST /auth/validate
-   * Valida le credenziali utente (per API Gateway)
-   */
-  @Post('auth/validate')
-  async validateUser(@Body() validateDto: { email: string; password: string }) {
-    console.log('🔍 Validating credentials for:', validateDto.email);
-
-    try {
-      const user = await this.userService.validateUser(
-        validateDto.email,
-        validateDto.password
-      );
-
-      if (!user) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
-      // Ritorna i dati utente (senza password)
-      return {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        fullName: user.fullName,
-        createdAt: user.createdAt,
-      };
-    } catch (error) {
-      console.error('Validation error:', error);
-      throw new UnauthorizedException('Invalid credentials');
-    }
   }
 }

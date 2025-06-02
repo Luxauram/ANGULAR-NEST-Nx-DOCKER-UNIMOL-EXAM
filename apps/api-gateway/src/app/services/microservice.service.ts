@@ -6,11 +6,12 @@ import { AxiosResponse } from 'axios';
 @Injectable()
 export class MicroserviceService {
   private readonly serviceUrls = {
-    user: process.env.USER_SERVICE_URL || 'http://localhost:3001',
-    post: process.env.POST_SERVICE_URL || 'http://localhost:3002',
-    feed: process.env.FEED_SERVICE_URL || 'http://localhost:3003',
+    user: process.env.USER_SERVICE_URL || 'http://host.docker.internal:3001',
+    post: process.env.POST_SERVICE_URL || 'http://host.docker.internal:3002',
+    feed: process.env.FEED_SERVICE_URL || 'http://host.docker.internal:3003',
     socialGraph:
-      process.env.SOCIAL_GRAPH_SERVICE_URL || 'http://localhost:3004',
+      process.env.SOCIAL_GRAPH_SERVICE_URL ||
+      'http://host.docker.internal:3004',
   };
 
   constructor(private readonly httpService: HttpService) {}
@@ -57,6 +58,7 @@ export class MicroserviceService {
       return response.data;
     } catch (error) {
       console.error(`❌ Error calling ${service} service:`, error.message);
+      console.error('Error details:', error);
       this.handleServiceError(error, service);
     }
   }

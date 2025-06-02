@@ -16,18 +16,16 @@ export class AuthService {
   ) {}
 
   /**
-   * Login semplificato - per il progetto universitario
-   * In produzione useresti password hashate, etc.
+   * Login
    */
   async login(
     email: string,
     password: string
   ): Promise<{ access_token: string; user: any }> {
     try {
-      // Chiama il User Service per validare le credenziali
       const user = await this.microserviceService.post(
         'user',
-        '/auth/validate',
+        '/users/auth/validate',
         {
           email,
           password,
@@ -63,23 +61,26 @@ export class AuthService {
   }
 
   /**
-   * Registrazione semplificata
+   * Registrazione
    */
   async register(userData: {
     email: string;
     password: string;
     username: string;
-    fullName?: string;
+    firstName: string;
+    lastName: string;
+    bio?: string;
   }): Promise<{ access_token: string; user: any }> {
     try {
-      // Crea l'utente tramite User Service
-      const user = await this.microserviceService.post(
-        'user',
-        '/users',
-        userData
-      );
+      const user = await this.microserviceService.post('user', '/users', {
+        email: userData.email,
+        password: userData.password,
+        username: userData.username,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        bio: userData.bio,
+      });
 
-      // Genera subito il token per il login automatico
       const payload: JwtPayload = {
         userId: user.id,
         email: user.email,
@@ -99,7 +100,7 @@ export class AuthService {
       };
     } catch (error) {
       console.error('Registration error:', error);
-      throw error; // Rilancia l'errore del microservizio
+      throw error;
     }
   }
 

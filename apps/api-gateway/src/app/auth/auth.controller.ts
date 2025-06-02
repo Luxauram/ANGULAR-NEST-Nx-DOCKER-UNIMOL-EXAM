@@ -1,18 +1,7 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
-
-// DTOs
-export class LoginDto {
-  email: string;
-  password: string;
-}
-
-export class RegisterDto {
-  email: string;
-  password: string;
-  username: string;
-  fullName?: string;
-}
+import { LoginDto } from '../dto/auth/login.dto';
+import { RegisterDto } from '../dto/auth/register.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -23,7 +12,7 @@ export class AuthController {
    * Login utente
    */
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
+  async login(@Body(ValidationPipe) loginDto: LoginDto) {
     console.log('🔐 Login attempt for:', loginDto.email);
 
     return await this.authService.login(loginDto.email, loginDto.password);
@@ -34,7 +23,7 @@ export class AuthController {
    * Registrazione nuovo utente
    */
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
+  async register(@Body(ValidationPipe) registerDto: RegisterDto) {
     console.log('📝 Registration attempt for:', registerDto.email);
 
     return await this.authService.register(registerDto);

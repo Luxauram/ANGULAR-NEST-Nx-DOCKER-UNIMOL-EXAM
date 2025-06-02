@@ -8,23 +8,12 @@ import {
   Param,
   UseGuards,
   Request,
+  ValidationPipe,
 } from '@nestjs/common';
 import { MicroserviceService } from '../services/microservice.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-
-// DTOs
-export class CreateUserDto {
-  email: string;
-  password: string;
-  username: string;
-  fullName?: string;
-}
-
-export class UpdateUserDto {
-  fullName?: string;
-  username?: string;
-  // Non permettiamo di cambiare email/password tramite API Gateway
-}
+import { CreateUserDto } from '../dto/user/create-user.dto';
+import { UpdateUserDto } from '../dto/user/update-user.dto';
 
 @Controller('users')
 export class UserController {
@@ -35,8 +24,9 @@ export class UserController {
    * Crea nuovo utente (pubblico - per registrazione)
    */
   @Post()
-  async createUser(@Body() createUserDto: CreateUserDto) {
+  async createUser(@Body(ValidationPipe) createUserDto: CreateUserDto) {
     console.log('👤 Creating user:', createUserDto.username);
+    console.log('📝 User data:', JSON.stringify(createUserDto, null, 2));
 
     return await this.microserviceService.post('user', '/users', createUserDto);
   }
@@ -52,6 +42,30 @@ export class UserController {
     console.log('👤 Getting profile for user:', userId);
 
     return await this.microserviceService.get('user', `/users/${userId}`);
+  }
+
+  /**
+   * GET /api/users/stats
+   * Statistiche utenti (protetto)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('stats')
+  async getUserStats() {
+    console.log('📊 Getting user stats');
+
+    return await this.microserviceService.get('user', '/users/stats');
+  }
+
+  /**
+   * GET /api/users/search/:query
+   * Cerca utenti per username o nome
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('search/:query')
+  async searchUsers(@Param('query') query: string) {
+    console.log('🔍 Searching users:', query);
+
+    return await this.microserviceService.get('user', `/users/search/${query}`);
   }
 
   /**
@@ -73,7 +87,7 @@ export class UserController {
   @Put('profile')
   async updateCurrentUserProfile(
     @Request() req,
-    @Body() updateUserDto: UpdateUserDto
+    @Body(ValidationPipe) updateUserDto: UpdateUserDto
   ) {
     const userId = req.user.userId;
     console.log('👤 Updating profile for user:', userId);
@@ -96,17 +110,5 @@ export class UserController {
     console.log('👤 Deleting user:', userId);
 
     return await this.microserviceService.delete('user', `/users/${userId}`);
-  }
-
-  /**
-   * GET /api/users/search/:query
-   * Cerca utenti per username o fullName
-   */
-  @UseGuards(JwtAuthGuard)
-  @Get('search/:query')
-  async searchUsers(@Param('query') query: string) {
-    console.log('🔍 Searching users:', query);
-
-    return await this.microserviceService.get('user', `/users/search/${query}`);
   }
 }
