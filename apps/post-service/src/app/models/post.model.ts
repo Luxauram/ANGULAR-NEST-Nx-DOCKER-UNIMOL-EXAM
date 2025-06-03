@@ -3,13 +3,13 @@ import { Document, Types } from 'mongoose';
 
 export type PostDocument = Post & Document;
 
-@Schema({ timestamps: true }) // Aggiunge automaticamente createdAt e updatedAt
+@Schema({ timestamps: true })
 export class Post {
   @Prop({ required: true })
   content: string;
 
   @Prop({ required: true })
-  authorId: string; // ID dell'utente dal User Service
+  userId: string;
 
   @Prop({ default: 0 })
   likesCount: number;
@@ -18,12 +18,11 @@ export class Post {
   commentsCount: number;
 
   @Prop({ type: [String], default: [] })
-  tags: string[]; // Hashtags opzionali
+  tags: string[];
 
   @Prop({ default: true })
   isPublic: boolean;
 
-  // Campi aggiunti automaticamente da timestamps: true
   createdAt?: Date;
   updatedAt?: Date;
 }

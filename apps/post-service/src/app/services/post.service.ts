@@ -14,8 +14,6 @@ export class PostService {
   constructor(private readonly postRepository: PostRepository) {}
 
   async createPost(createPostDto: CreatePostDto): Promise<Post> {
-    // Qui potresti aggiungere validazioni aggiuntive
-    // Es: verificare che l'authorId esista nel User Service
     return this.postRepository.create(createPostDto);
   }
 
@@ -38,8 +36,8 @@ export class PostService {
     };
   }
 
-  async getPostsByAuthor(authorId: string): Promise<Post[]> {
-    return this.postRepository.findByAuthorId(authorId);
+  async getPostsByUser(userId: string): Promise<Post[]> {
+    return this.postRepository.findByUserId(userId);
   }
 
   async updatePost(
@@ -49,8 +47,7 @@ export class PostService {
   ): Promise<Post> {
     const existingPost = await this.getPostById(id);
 
-    // Verifica che solo l'autore possa modificare il post
-    if (existingPost.authorId !== requestingUserId) {
+    if (existingPost.userId !== requestingUserId) {
       throw new ForbiddenException('You can only update your own posts');
     }
 
@@ -58,15 +55,13 @@ export class PostService {
     if (!updatedPost) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
-
     return updatedPost;
   }
 
   async deletePost(id: string, requestingUserId: string): Promise<void> {
     const existingPost = await this.getPostById(id);
 
-    // Verifica che solo l'autore possa eliminare il post
-    if (existingPost.authorId !== requestingUserId) {
+    if (existingPost.userId !== requestingUserId) {
       throw new ForbiddenException('You can only delete your own posts');
     }
 

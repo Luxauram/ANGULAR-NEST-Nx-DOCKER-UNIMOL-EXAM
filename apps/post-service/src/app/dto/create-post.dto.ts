@@ -13,7 +13,7 @@ export class CreatePostDto {
 
   @IsString()
   @IsNotEmpty()
-  authorId: string;
+  userId: string;
 
   @IsArray()
   @IsOptional()

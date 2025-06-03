@@ -14,7 +14,7 @@ async function bootstrap() {
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
-        forbidNonWhitelisted: true,
+        forbidNonWhitelisted: false,
         transform: true,
         transformOptions: {
           enableImplicitConversion: true,
@@ -23,13 +23,11 @@ async function bootstrap() {
     );
 
     app.enableCors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:4200',
+      origin: true,
+      // origin: process.env.FRONTEND_URL || 'http://localhost:4200',
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       credentials: true,
     });
-
-    const globalPrefix = 'api';
-    app.setGlobalPrefix(globalPrefix);
 
     const port = process.env.POST_SERVICE_PORT || 3002;
 

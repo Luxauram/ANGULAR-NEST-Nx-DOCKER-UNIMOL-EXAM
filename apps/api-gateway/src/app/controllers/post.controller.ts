@@ -12,26 +12,9 @@ import {
 } from '@nestjs/common';
 import { MicroserviceService } from '../services/microservice.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-
-// DTOs
-export class CreatePostDto {
-  title: string;
-  content: string;
-  tags?: string[];
-}
-
-export class UpdatePostDto {
-  title?: string;
-  content?: string;
-  tags?: string[];
-}
-
-export class GetPostsQueryDto {
-  page?: number;
-  limit?: number;
-  userId?: string;
-  tags?: string;
-}
+import { CreatePostDto } from '../dto/post/create-post.dto';
+import { UpdatePostDto } from '../dto/post/update-post.dto';
+import { GetPostsQueryDto } from '../dto/post/get-posts-query.dto';
 
 @Controller('posts')
 export class PostController {
@@ -44,14 +27,27 @@ export class PostController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async createPost(@Request() req, @Body() createPostDto: CreatePostDto) {
+    console.log('🔍 Received body:', createPostDto);
+    console.log('🔍 User from JWT:', req.user);
+
     const userId = req.user.userId;
+
     console.log('📝 Creating post for user:', userId);
 
-    // Aggiungi l'userId al post
+    let finalContent = createPostDto.content;
+    if (createPostDto.title) {
+      finalContent = `${createPostDto.title}\n\n${createPostDto.content}`;
+    }
+
     const postData = {
-      ...createPostDto,
-      userId,
+      content: finalContent,
+      userId: userId, // Cambiato da authorId a userId
+      tags: createPostDto.tags || [],
+      isPublic:
+        createPostDto.isPublic !== undefined ? createPostDto.isPublic : true,
     };
+
+    console.log('📤 Sending to Post Service:', postData);
 
     return await this.microserviceService.post('post', '/posts', postData);
   }
@@ -64,7 +60,12 @@ export class PostController {
   async getPosts(@Query() query: GetPostsQueryDto) {
     console.log('📋 Getting posts with filters:', query);
 
-    return await this.microserviceService.get('post', '/posts', query);
+    const mappedQuery = {
+      ...query,
+      userId: query.userId, // Cambiato da authorId a userId
+    };
+
+    return await this.microserviceService.get('post', '/posts', mappedQuery);
   }
 
   /**
@@ -82,7 +83,7 @@ export class PostController {
 
     const queryWithUserId = {
       ...query,
-      userId,
+      userId: userId, // Cambiato da authorId a userId
     };
 
     return await this.microserviceService.get(
@@ -117,13 +118,27 @@ export class PostController {
     const userId = req.user.userId;
     console.log('✏️ Updating post:', id, 'by user:', userId);
 
-    // Il Post Service dovrebbe verificare che l'utente sia il proprietario
-    const postData = {
-      ...updatePostDto,
-      requesterId: userId, // Per verificare ownership
-    };
+    let finalContent = updatePostDto.content;
+    if (updatePostDto.title && updatePostDto.content) {
+      finalContent = `${updatePostDto.title}\n\n${updatePostDto.content}`;
+    } else if (updatePostDto.title && !updatePostDto.content) {
+      finalContent = updatePostDto.title;
+    }
 
-    return await this.microserviceService.put('post', `/posts/${id}`, postData);
+    const postData: any = {};
+    if (finalContent !== undefined) postData.content = finalContent;
+    if (updatePostDto.tags !== undefined) postData.tags = updatePostDto.tags;
+    if (updatePostDto.isPublic !== undefined)
+      postData.isPublic = updatePostDto.isPublic;
+
+    console.log('📤 Sending update to Post Service:', postData);
+
+    return await this.microserviceService.patch(
+      'post',
+      `/posts/${id}`,
+      postData,
+      { 'x-user-id': userId }
+    );
   }
 
   /**
@@ -136,16 +151,17 @@ export class PostController {
     const userId = req.user.userId;
     console.log('🗑️ Deleting post:', id, 'by user:', userId);
 
-    // Passiamo l'userId per verificare ownership nel Post Service
     return await this.microserviceService.delete(
       'post',
-      `/posts/${id}?requesterId=${userId}`
+      `/posts/${id}`,
+      undefined,
+      { 'x-user-id': userId }
     );
   }
 
   /**
    * POST /api/posts/:id/like
-   * Like/Unlike post (protetto)
+   * Like/Unlike post (protetto) - Gestisce toggle automaticamente
    */
   @UseGuards(JwtAuthGuard)
   @Post(':id/like')
@@ -156,7 +172,41 @@ export class PostController {
     return await this.microserviceService.post(
       'post',
       `/posts/${postId}/like`,
-      { userId }
+      {},
+      { 'x-user-id': userId }
+    );
+  }
+
+  /**
+   * POST /api/posts/:id/unlike
+   * Unlike post (protetto)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/unlike')
+  async unlikePost(@Request() req, @Param('id') postId: string) {
+    const userId = req.user.userId;
+    console.log('💔 Unliking post:', postId, 'by user:', userId);
+
+    return await this.microserviceService.post(
+      'post',
+      `/posts/${postId}/unlike`,
+      {},
+      { 'x-user-id': userId }
+    );
+  }
+
+  /**
+   * POST /api/posts/:id/increment-comments
+   * Incrementa il contatore dei commenti
+   */
+  @Post(':id/increment-comments')
+  async incrementComments(@Param('id') id: string) {
+    console.log('💬 Incrementing comments for post:', id);
+
+    return await this.microserviceService.post(
+      'post',
+      `/posts/${id}/increment-comments`,
+      {}
     );
   }
 
@@ -171,15 +221,18 @@ export class PostController {
   ) {
     console.log('📋 Getting posts for user:', userId);
 
-    const queryWithUserId = {
-      ...query,
-      userId,
-    };
-
     return await this.microserviceService.get(
       'post',
-      '/posts',
-      queryWithUserId
+      `/posts/user/${userId}`, // Cambiato da /posts/author/${userId} a /posts/user/${userId}
+      query
     );
+  }
+
+  /**
+   * Health check endpoint
+   */
+  @Get('health/check')
+  async healthCheck() {
+    return await this.microserviceService.get('post', '/posts/health/check');
   }
 }

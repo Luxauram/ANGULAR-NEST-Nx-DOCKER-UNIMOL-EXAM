@@ -22,16 +22,22 @@ export class MicroserviceService {
   async get(
     service: keyof typeof this.serviceUrls,
     path: string,
-    params?: any
+    params?: any,
+    headers?: Record<string, string>
   ): Promise<any> {
     try {
       const url = `${this.serviceUrls[service]}${path}`;
       console.log(`🔄 GET Request: ${url}`);
 
       const response: AxiosResponse = await firstValueFrom(
-        this.httpService.get(url, { params })
+        this.httpService.get(url, {
+          params,
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers,
+          },
+        })
       );
-
       return response.data;
     } catch (error) {
       console.error(`❌ Error calling ${service} service:`, error.message);
@@ -45,16 +51,27 @@ export class MicroserviceService {
   async post(
     service: keyof typeof this.serviceUrls,
     path: string,
-    data: any
+    data: any,
+    headers?: Record<string, string>
   ): Promise<any> {
+    console.log('🚀 API GATEWAY - Making request');
+    console.log('🚀 Service:', service);
+    console.log('🚀 URL:', `${this.serviceUrls[service]}${path}`);
+    console.log('🚀 Data:', JSON.stringify(data, null, 2));
+    console.log('🚀 Headers:', headers);
+
     try {
       const url = `${this.serviceUrls[service]}${path}`;
       console.log(`🔄 POST Request: ${url}`, { data });
 
       const response: AxiosResponse = await firstValueFrom(
-        this.httpService.post(url, data)
+        this.httpService.post(url, data, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers,
+          },
+        })
       );
-
       return response.data;
     } catch (error) {
       console.error(`❌ Error calling ${service} service:`, error.message);
@@ -69,16 +86,49 @@ export class MicroserviceService {
   async put(
     service: keyof typeof this.serviceUrls,
     path: string,
-    data: any
+    data: any,
+    headers?: Record<string, string>
   ): Promise<any> {
     try {
       const url = `${this.serviceUrls[service]}${path}`;
       console.log(`🔄 PUT Request: ${url}`, { data });
 
       const response: AxiosResponse = await firstValueFrom(
-        this.httpService.put(url, data)
+        this.httpService.put(url, data, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers,
+          },
+        })
       );
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Error calling ${service} service:`, error.message);
+      this.handleServiceError(error, service);
+    }
+  }
 
+  /**
+   * Effettua una chiamata PATCH verso un microservizio
+   */
+  async patch(
+    service: keyof typeof this.serviceUrls,
+    path: string,
+    data: any,
+    headers?: Record<string, string>
+  ): Promise<any> {
+    try {
+      const url = `${this.serviceUrls[service]}${path}`;
+      console.log(`🔄 PATCH Request: ${url}`, { data });
+
+      const response: AxiosResponse = await firstValueFrom(
+        this.httpService.patch(url, data, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers,
+          },
+        })
+      );
       return response.data;
     } catch (error) {
       console.error(`❌ Error calling ${service} service:`, error.message);
@@ -91,16 +141,23 @@ export class MicroserviceService {
    */
   async delete(
     service: keyof typeof this.serviceUrls,
-    path: string
+    path: string,
+    data?: any,
+    headers?: Record<string, string>
   ): Promise<any> {
     try {
       const url = `${this.serviceUrls[service]}${path}`;
       console.log(`🔄 DELETE Request: ${url}`);
 
       const response: AxiosResponse = await firstValueFrom(
-        this.httpService.delete(url)
+        this.httpService.delete(url, {
+          data, // AGGIUNTO: supporto per body
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers,
+          },
+        })
       );
-
       return response.data;
     } catch (error) {
       console.error(`❌ Error calling ${service} service:`, error.message);
@@ -115,7 +172,9 @@ export class MicroserviceService {
     if (error.response) {
       // Il microservizio ha risposto con un errore
       throw new HttpException(
-        error.response.data || `Error from ${serviceName} service`,
+        error.response.data?.message ||
+          error.response.data ||
+          `Error from ${serviceName} service`,
         error.response.status || HttpStatus.INTERNAL_SERVER_ERROR
       );
     } else if (error.request) {

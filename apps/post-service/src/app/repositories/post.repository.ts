@@ -22,14 +22,14 @@ export class PostRepository {
   async findAll(
     query: GetPostsQueryDto
   ): Promise<{ posts: Post[]; total: number }> {
-    const { authorId, page = 1, limit = 10, tag } = query;
+    const { userId, page = 1, limit = 10, tag } = query;
     const skip = (page - 1) * limit;
 
     // Costruisci il filtro
     const filter: any = { isPublic: true };
 
-    if (authorId) {
-      filter.authorId = authorId;
+    if (userId) {
+      filter.userId = userId;
     }
 
     if (tag) {
@@ -50,9 +50,9 @@ export class PostRepository {
     return { posts, total };
   }
 
-  async findByAuthorId(authorId: string): Promise<Post[]> {
+  async findByUserId(userId: string): Promise<Post[]> {
     return this.postModel
-      .find({ authorId, isPublic: true })
+      .find({ userId, isPublic: true })
       .sort({ createdAt: -1 })
       .exec();
   }

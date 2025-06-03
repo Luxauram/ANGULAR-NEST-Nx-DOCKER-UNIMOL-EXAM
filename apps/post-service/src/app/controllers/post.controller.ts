@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   Headers,
+  UsePipes,
 } from '@nestjs/common';
 import { PostService } from '../services/post.service';
 import { CreatePostDto } from '../dto/create-post.dto';
@@ -23,18 +24,42 @@ export class PostController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body(ValidationPipe) createPostDto: CreatePostDto) {
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: false,
+    })
+  )
+  async create(@Body() createPostDto: CreatePostDto) {
+    console.log('🎯 POST SERVICE - Request received!');
+    console.log(
+      '📝 POST SERVICE - Raw body:',
+      JSON.stringify(createPostDto, null, 2)
+    );
+    console.log('📝 POST SERVICE - Body type:', typeof createPostDto);
+    console.log(
+      '📝 POST SERVICE - Body keys:',
+      Object.keys(createPostDto || {})
+    );
     return this.postService.createPost(createPostDto);
   }
 
   @Get()
-  async findAll(@Query(ValidationPipe) query: GetPostsQueryDto) {
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: false,
+    })
+  )
+  async findAll(@Query() query: GetPostsQueryDto) {
+    console.log('📋 Post Service - Query params:', query);
     return this.postService.getPosts(query);
   }
 
-  @Get('author/:authorId')
-  async findByAuthor(@Param('authorId') authorId: string) {
-    return this.postService.getPostsByAuthor(authorId);
+  @Get('user/:userId')
+  async findByUser(@Param('userId') userId: string) {
+    return this.postService.getPostsByUser(userId);
   }
 
   @Get(':id')
@@ -43,27 +68,43 @@ export class PostController {
   }
 
   @Patch(':id')
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      skipMissingProperties: true,
+    })
+  )
   async update(
     @Param('id') id: string,
-    @Body(ValidationPipe) updatePostDto: UpdatePostDto,
-    @Headers('x-user-id') userId: string // Simuliamo l'autenticazione con un header
+    @Body() updatePostDto: UpdatePostDto,
+    @Headers('x-user-id') userId: string
   ) {
+    console.log(
+      '✏️ Post Service - Update data:',
+      updatePostDto,
+      'User ID:',
+      userId
+    );
     return this.postService.updatePost(id, updatePostDto, userId);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string, @Headers('x-user-id') userId: string) {
+    console.log('🗑️ Post Service - Delete post:', id, 'User ID:', userId);
     return this.postService.deletePost(id, userId);
   }
 
   @Post(':id/like')
   async like(@Param('id') id: string) {
+    console.log('❤️ Post Service - Like post:', id);
     return this.postService.likePost(id);
   }
 
   @Post(':id/unlike')
   async unlike(@Param('id') id: string) {
+    console.log('💔 Post Service - Unlike post:', id);
     return this.postService.unlikePost(id);
   }
 
