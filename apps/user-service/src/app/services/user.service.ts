@@ -10,14 +10,18 @@ import * as bcrypt from 'bcrypt';
 import { UserRepository } from '../repositories/user.repository';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { User, UserResponse, toUserResponse } from '../models/user.model';
+import { UserResponse, toUserResponse } from '../models/user.model';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
   private readonly saltRounds = 12;
 
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly httpService: HttpService
+  ) {}
 
   // Crea un nuovo utente
   async create(createUserDto: CreateUserDto): Promise<UserResponse> {
@@ -50,6 +54,10 @@ export class UserService {
       });
 
       this.logger.log(`User created successfully with ID: ${user.id}`);
+
+      // Sincronizza con il social graph
+      await this.syncUserWithSocialGraph(user.id, user.username, user.email);
+
       return toUserResponse(user);
     } catch (error) {
       this.logger.error('Error creating user:', error);
@@ -161,6 +169,16 @@ export class UserService {
       }
 
       this.logger.log(`User updated successfully: ${id}`);
+
+      // Sincronizza con il social graph se username o email sono cambiati
+      if (updateUserDto.username || updateUserDto.email) {
+        await this.syncUserWithSocialGraph(
+          updatedUser.id,
+          updatedUser.username,
+          updatedUser.email
+        );
+      }
+
       return toUserResponse(updatedUser);
     } catch (error) {
       this.logger.error(`Error updating user ${id}:`, error);
@@ -180,6 +198,10 @@ export class UserService {
     }
 
     this.logger.log(`User soft deleted: ${id}`);
+
+    // Sincronizza la cancellazione con il social graph
+    await this.syncUserDeletionWithSocialGraph(id);
+
     return { message: 'User deleted successfully' };
   }
 
@@ -195,6 +217,10 @@ export class UserService {
     }
 
     this.logger.log(`User permanently deleted: ${id}`);
+
+    // Sincronizza la cancellazione definitiva con il social graph
+    await this.syncUserDeletionWithSocialGraph(id, true);
+
     return { message: 'User permanently deleted' };
   }
 
@@ -264,7 +290,7 @@ export class UserService {
 
     return {
       totalUsers,
-      activeUsers: totalUsers, // Il count già filtra per isActive: true
+      activeUsers: totalUsers,
     };
   }
 
@@ -282,7 +308,6 @@ export class UserService {
         return null;
       }
 
-      // Usa bcrypt per confrontare la password (invece del confronto diretto)
       const isValid = await bcrypt.compare(password, user.passwordHash);
 
       if (!isValid) {
@@ -293,6 +318,66 @@ export class UserService {
     } catch (error) {
       this.logger.error('Error validating user:', error);
       return null;
+    }
+  }
+
+  /**
+   * Sincronizza utente con il social graph service
+   */
+  private async syncUserWithSocialGraph(
+    userId: string,
+    username: string,
+    email: string
+  ): Promise<void> {
+    try {
+      const socialGraphUrl =
+        process.env.SOCIAL_GRAPH_SERVICE_URL ||
+        'http://host.docker.internal:3004';
+
+      await this.httpService
+        .post(`${socialGraphUrl}/sync-user`, {
+          userId,
+          username,
+          email,
+        })
+        .toPromise();
+
+      this.logger.log(`✅ User ${userId} synced with social graph`);
+    } catch (error) {
+      this.logger.error(
+        `❌ Failed to sync user ${userId} with social graph:`,
+        error
+      );
+      // Non bloccare l'operazione principale se la sincronizzazione fallisce
+    }
+  }
+  /**
+   * Sincronizza cancellazione utente con il social graph service
+   */
+  private async syncUserDeletionWithSocialGraph(
+    userId: string,
+    permanent: boolean = false
+  ): Promise<void> {
+    try {
+      const socialGraphUrl =
+        process.env.SOCIAL_GRAPH_SERVICE_URL ||
+        'http://host.docker.internal:3004';
+
+      await this.httpService
+        .delete(`${socialGraphUrl}/users/${userId}`, {
+          data: { permanent },
+        })
+        .toPromise();
+
+      this.logger.log(
+        `✅ User ${userId} deletion synced with social graph (permanent: ${permanent})`
+      );
+    } catch (error) {
+      this.logger.error(
+        `❌ Failed to sync user ${userId} deletion with social graph:`,
+        error
+      );
+      // Non bloccare l'operazione principale se la sincronizzazione fallisce
     }
   }
 }

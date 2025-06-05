@@ -23,13 +23,11 @@ async function bootstrap() {
     );
 
     app.enableCors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:4200',
+      // origin: process.env.FRONTEND_URL || 'http://localhost:4200',
+      origin: '*',
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       credentials: true,
     });
-
-    const globalPrefix = 'api';
-    app.setGlobalPrefix(globalPrefix);
 
     const port = process.env.SOCIAL_GRAPH_SERVICE_PORT || 3004;
     await app.listen(port);
