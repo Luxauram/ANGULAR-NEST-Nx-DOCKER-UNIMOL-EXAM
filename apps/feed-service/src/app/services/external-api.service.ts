@@ -8,13 +8,18 @@ import { FeedItem } from '../models/feed.model';
 export class ExternalApiService {
   private readonly logger = new Logger(ExternalApiService.name);
 
-  // URLs dei microservizi (configurabili via environment variables)
   private readonly USER_SERVICE_URL =
-    process.env.USER_SERVICE_URL || 'http://localhost:3001';
+    process.env.USER_SERVICE_URL ||
+    process.env.USER_SERVICE_DOCKER ||
+    'http://host.docker.internal:3001';
   private readonly POST_SERVICE_URL =
-    process.env.POST_SERVICE_URL || 'http://localhost:3002';
+    process.env.POST_SERVICE_URL ||
+    process.env.POST_SERVICE_DOCKER ||
+    'http://host.docker.internal:3002';
   private readonly SOCIAL_GRAPH_SERVICE_URL =
-    process.env.SOCIAL_GRAPH_SERVICE_URL || 'http://localhost:3004';
+    process.env.SOCIAL_GRAPH_SERVICE_URL ||
+    process.env.SOCIAL_GRAPH_SERVICE_DOCKER ||
+    'http://host.docker.internal:3004';
 
   constructor(private readonly httpService: HttpService) {}
 
@@ -22,13 +27,25 @@ export class ExternalApiService {
   async getFollowing(userId: string): Promise<string[]> {
     try {
       const url = `${this.SOCIAL_GRAPH_SERVICE_URL}/social-graph/following/${userId}`;
-      const response = await firstValueFrom(this.httpService.get(url));
+      this.logger.log(`Chiamata API: ${url}`);
 
-      return response.data.following || [];
+      const response = await firstValueFrom(
+        this.httpService.get(url, { timeout: 5000 })
+      );
+
+      // Gestisci diverse strutture di risposta
+      const following =
+        response.data?.data?.following ||
+        response.data?.following ||
+        response.data ||
+        [];
+
+      this.logger.log(`Utente ${userId} segue ${following.length} persone`);
+      return following;
     } catch (error) {
       this.logger.error(
         `Errore recuperando following per utente ${userId}:`,
-        error.message
+        error.response?.data || error.message
       );
       // Se il servizio non è disponibile, ritorna array vuoto
       return [];
@@ -38,19 +55,26 @@ export class ExternalApiService {
   // Recupera i dettagli di un utente
   async getUserDetails(
     userId: string
-  ): Promise<{ id: string; username: string } | null> {
+  ): Promise<{ id: string; username: string; email?: string } | null> {
     try {
       const url = `${this.USER_SERVICE_URL}/users/${userId}`;
-      const response = await firstValueFrom(this.httpService.get(url));
+      this.logger.log(`Chiamata API: ${url}`);
+
+      const response = await firstValueFrom(
+        this.httpService.get(url, { timeout: 5000 })
+      );
+
+      const userData = response.data?.data || response.data;
 
       return {
-        id: response.data.id,
-        username: response.data.username,
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
       };
     } catch (error) {
       this.logger.error(
         `Errore recuperando dettagli utente ${userId}:`,
-        error.message
+        error.response?.data || error.message
       );
       return null;
     }
@@ -60,13 +84,110 @@ export class ExternalApiService {
   async getUserPosts(userId: string, limit: number = 50): Promise<any[]> {
     try {
       const url = `${this.POST_SERVICE_URL}/posts/user/${userId}?limit=${limit}`;
-      const response = await firstValueFrom(this.httpService.get(url));
+      this.logger.log(`Chiamata API: ${url}`);
 
-      return response.data || [];
+      const response = await firstValueFrom(
+        this.httpService.get(url, { timeout: 10000 })
+      );
+
+      const posts = response.data?.data || response.data || [];
+      this.logger.log(`Recuperati ${posts.length} post per utente ${userId}`);
+
+      return posts;
     } catch (error) {
       this.logger.error(
         `Errore recuperando post per utente ${userId}:`,
-        error.message
+        error.response?.data || error.message
+      );
+      return [];
+    }
+  }
+
+  // Recupera i dettagli di un singolo post
+  async getPostDetails(postId: string): Promise<{
+    id: string;
+    userId: string;
+    content: string;
+    createdAt?: Date;
+  } | null> {
+    try {
+      const url = `${this.POST_SERVICE_URL}/posts/${postId}`;
+      this.logger.log(`Chiamata API: ${url}`);
+
+      const response = await firstValueFrom(
+        this.httpService.get(url, { timeout: 5000 })
+      );
+
+      const postData = response.data?.data || response.data;
+
+      return {
+        id: postData.id || postData._id,
+        userId: postData.userId || postData.authorId,
+        content: postData.content,
+        createdAt: postData.createdAt
+          ? new Date(postData.createdAt)
+          : undefined,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Errore recuperando dettagli post ${postId}:`,
+        error.response?.data || error.message
+      );
+      return null;
+    }
+  }
+
+  // Recupera i post più recenti da tutti gli utenti
+  async getRecentPosts(limit: number = 20, offset: number = 0): Promise<any[]> {
+    try {
+      const url = `${this.POST_SERVICE_URL}/posts/recent?limit=${limit}&offset=${offset}`;
+      this.logger.log(`Chiamata API: ${url}`);
+
+      const response = await firstValueFrom(
+        this.httpService.get(url, { timeout: 10000 })
+      );
+
+      const posts = response.data?.data || response.data || [];
+      this.logger.log(`Recuperati ${posts.length} post recenti`);
+
+      return posts;
+    } catch (error) {
+      this.logger.error(
+        `Errore recuperando post recenti:`,
+        error.response?.data || error.message
+      );
+      return [];
+    }
+  }
+
+  // Recupera post trending
+  async getTrendingPosts(
+    limit: number = 10,
+    timeframe: string = '24h'
+  ): Promise<any[]> {
+    try {
+      // Prova prima l'endpoint trending specifico
+      const trendingUrl = `${this.POST_SERVICE_URL}/posts/trending?limit=${limit}&timeframe=${timeframe}`;
+      this.logger.log(`Tentativo chiamata trending: ${trendingUrl}`);
+
+      try {
+        const response = await firstValueFrom(
+          this.httpService.get(trendingUrl, { timeout: 10000 })
+        );
+        const posts = response.data?.data || response.data || [];
+        this.logger.log(`Recuperati ${posts.length} post trending`);
+        return posts;
+      } catch (trendingError) {
+        // Se l'endpoint trending non esiste, usa i post recenti come fallback
+        this.logger.warn(
+          'Endpoint trending non disponibile, usando post recenti come fallback'
+        );
+        return this.getRecentPosts(limit, 0);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Errore recuperando post trending:`,
+        error.response?.data || error.message
       );
       return [];
     }
@@ -75,6 +196,8 @@ export class ExternalApiService {
   // Genera il feed aggregando i post degli utenti seguiti
   async generateFeedItems(userId: string): Promise<FeedItem[]> {
     try {
+      this.logger.log(`Inizio generazione feed per utente ${userId}`);
+
       // 1. Recupera gli utenti seguiti
       const followingIds = await this.getFollowing(userId);
 
@@ -88,25 +211,34 @@ export class ExternalApiService {
       // 2. Recupera i post di tutti gli utenti seguiti
       const allPosts = [];
 
-      for (const followedUserId of followingIds) {
-        const posts = await this.getUserPosts(followedUserId);
+      // Processa gli utenti in batch per performance
+      const batchSize = 5;
+      for (let i = 0; i < followingIds.length; i += batchSize) {
+        const batch = followingIds.slice(i, i + batchSize);
 
-        // Aggiungi i dettagli dell'utente a ogni post
-        const userDetails = await this.getUserDetails(followedUserId);
+        const batchPromises = batch.map(async (followedUserId) => {
+          const [posts, userDetails] = await Promise.all([
+            this.getUserPosts(followedUserId, 20), // Limita per performance
+            this.getUserDetails(followedUserId),
+          ]);
 
-        if (userDetails) {
-          const postsWithUser = posts.map((post) => ({
-            ...post,
-            userId: userDetails.id,
-            username: userDetails.username,
-          }));
+          if (userDetails && posts.length > 0) {
+            return posts.map((post) => ({
+              ...post,
+              userId: userDetails.id,
+              username: userDetails.username,
+            }));
+          }
+          return [];
+        });
 
-          allPosts.push(...postsWithUser);
-        }
+        const batchResults = await Promise.all(batchPromises);
+        allPosts.push(...batchResults.flat());
       }
 
       // 3. Trasforma in FeedItem e ordina per data
       const feedItems: FeedItem[] = allPosts
+        .filter((post) => post && post.id) // Filtra post validi
         .map((post) => ({
           postId: post.id || post._id,
           userId: post.userId,
@@ -135,13 +267,24 @@ export class ExternalApiService {
   async getFollowers(userId: string): Promise<string[]> {
     try {
       const url = `${this.SOCIAL_GRAPH_SERVICE_URL}/social-graph/followers/${userId}`;
-      const response = await firstValueFrom(this.httpService.get(url));
+      this.logger.log(`Chiamata API: ${url}`);
 
-      return response.data.followers || [];
+      const response = await firstValueFrom(
+        this.httpService.get(url, { timeout: 5000 })
+      );
+
+      const followers =
+        response.data?.data?.followers ||
+        response.data?.followers ||
+        response.data ||
+        [];
+
+      this.logger.log(`Utente ${userId} ha ${followers.length} followers`);
+      return followers;
     } catch (error) {
       this.logger.error(
         `Errore recuperando followers per utente ${userId}:`,
-        error.message
+        error.response?.data || error.message
       );
       return [];
     }

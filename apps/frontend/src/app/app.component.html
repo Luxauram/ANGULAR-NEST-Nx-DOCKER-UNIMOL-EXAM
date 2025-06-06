@@ -1,2 +1,18 @@
-<app-nx-welcome></app-nx-welcome>
-<router-outlet></router-outlet>
+<div class="app-container">
+  <!-- Navigation Bar -->
+  <nav class="navbar" *ngIf="authService.isAuthenticated()">
+    <div class="nav-brand">
+      <h2>SocialNetwork</h2>
+    </div>
+    <div class="nav-links">
+      <a routerLink="/home" routerLinkActive="active">Home</a>
+      <a routerLink="/profile" routerLinkActive="active">Profile</a>
+      <button (click)="logout()" class="logout-btn">Logout</button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

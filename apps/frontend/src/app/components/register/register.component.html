@@ -1,0 +1,137 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>Register</h2>
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input
+          type="text"
+          id="username"
+          formControlName="username"
+          placeholder="Choose a username"
+        />
+        <div
+          class="error"
+          *ngIf="
+            registerForm.get('username')?.touched &&
+            registerForm.get('username')?.errors
+          "
+        >
+          Username is required
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="Enter your email"
+        />
+        <div
+          class="error"
+          *ngIf="
+            registerForm.get('email')?.touched &&
+            registerForm.get('email')?.errors
+          "
+        >
+          <span *ngIf="registerForm.get('email')?.errors?.['required']">
+            Email is required
+          </span>
+          <span *ngIf="registerForm.get('email')?.errors?.['email']">
+            Please enter a valid email
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="firstName">First Name:</label>
+        <input
+          type="text"
+          id="firstName"
+          formControlName="firstName"
+          placeholder="Your first name"
+        />
+        <div
+          class="error"
+          *ngIf="
+            registerForm.get('firstName')?.touched &&
+            registerForm.get('firstName')?.errors
+          "
+        >
+          First name is required
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="lastName">Last Name:</label>
+        <input
+          type="text"
+          id="lastName"
+          formControlName="lastName"
+          placeholder="Your last name"
+        />
+        <div
+          class="error"
+          *ngIf="
+            registerForm.get('lastName')?.touched &&
+            registerForm.get('lastName')?.errors
+          "
+        >
+          Last name is required
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          placeholder="Choose a password (min 6 characters)"
+        />
+        <div
+          class="error"
+          *ngIf="
+            registerForm.get('password')?.touched &&
+            registerForm.get('password')?.errors
+          "
+        >
+          <span *ngIf="registerForm.get('password')?.errors?.['required']">
+            Password is required
+          </span>
+          <span *ngIf="registerForm.get('password')?.errors?.['minlength']">
+            Password must be at least 6 characters long
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="bio">Bio (optional):</label>
+        <textarea
+          id="bio"
+          formControlName="bio"
+          placeholder="Tell us something about yourself..."
+          rows="3"
+        ></textarea>
+      </div>
+
+      <button type="submit" [disabled]="registerForm.invalid || isLoading">
+        {{ isLoading ? 'Creating account...' : 'Register' }}
+      </button>
+
+      <div class="error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+    </form>
+
+    <p class="auth-link">
+      Already have an account? <a routerLink="/login">Login here</a>
+    </p>
+  </div>
+</div>

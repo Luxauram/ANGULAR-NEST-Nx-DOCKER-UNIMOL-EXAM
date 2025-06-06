@@ -1,0 +1,29 @@
+<div class="profile-container">
+  <div class="profile-header">
+    <h1>Your Profile</h1>
+  </div>
+
+  <div class="profile-info" *ngIf="currentUser">
+    <div class="user-details">
+      <h2>{{ currentUser.firstName }} {{ currentUser.lastName }}</h2>
+      <p>&#64;{{ currentUser.username }}</p>
+      <p>{{ currentUser.email }}</p>
+    </div>
+
+    <div class="social-stats">
+      <div class="stat">
+        <span class="number">{{ followers.length }}</span>
+        <span class="label">Followers</span>
+      </div>
+      <div class="stat">
+        <span class="number">{{ following.length }}</span>
+        <span class="label">Following</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="user-posts">
+    <h3>Your Posts</h3>
+    <app-post-list [posts]="userPosts" [isLoading]="isLoading"></app-post-list>
+  </div>
+</div>

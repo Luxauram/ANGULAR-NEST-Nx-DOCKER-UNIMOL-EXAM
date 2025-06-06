@@ -6,11 +6,21 @@ import { AxiosResponse } from 'axios';
 @Injectable()
 export class MicroserviceService {
   private readonly serviceUrls = {
-    user: process.env.USER_SERVICE_URL || 'http://host.docker.internal:3001',
-    post: process.env.POST_SERVICE_URL || 'http://host.docker.internal:3002',
-    feed: process.env.FEED_SERVICE_URL || 'http://host.docker.internal:3003',
+    user:
+      process.env.USER_SERVICE_URL ||
+      process.env.USER_SERVICE_DOCKER ||
+      'http://host.docker.internal:3001',
+    post:
+      process.env.POST_SERVICE_URL ||
+      process.env.POST_SERVICE_DOCKER ||
+      'http://host.docker.internal:3002',
+    feed:
+      process.env.FEED_SERVICE_URL ||
+      process.env.FEED_SERVICE_DOCKER ||
+      'http://host.docker.internal:3003',
     socialGraph:
       process.env.SOCIAL_GRAPH_SERVICE_URL ||
+      process.env.SOCIAL_GRAPH_SERVICE_DOCKER ||
       'http://host.docker.internal:3004',
   };
 

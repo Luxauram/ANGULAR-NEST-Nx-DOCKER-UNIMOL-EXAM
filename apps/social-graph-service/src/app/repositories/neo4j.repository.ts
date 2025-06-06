@@ -7,7 +7,7 @@ import { UserNode } from '../models/relationship.model';
 export class Neo4jRepository {
   constructor(private neo4jService: Neo4jService) {}
 
-  // Crea un nodo utente (viene chiamato quando si sincronizza dal user-service)
+  // Crea un nodo utente (sincronizza da user-service)
   async createUserNode(
     userId: string,
     username: string,
@@ -231,7 +231,7 @@ export class Neo4jRepository {
     }
   }
 
-  // 3. Stesso fix per getFollowing
+  // Ottieni i following di un utente
   async getFollowing(userId: string, limit = 50): Promise<UserNode[]> {
     console.log('👥 [Neo4jRepository] Getting following for user:', {
       userId,
