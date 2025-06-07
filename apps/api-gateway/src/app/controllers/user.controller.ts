@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-inferrable-types */
 import {
   Body,
   Controller,
@@ -9,6 +10,7 @@ import {
   UseGuards,
   Request,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { MicroserviceService } from '../services/microservice.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -69,14 +71,35 @@ export class UserController {
   }
 
   /**
-   * GET /api/users/:id
-   * Ottieni profilo utente pubblico
+   * GET /api/users/username/:username
+   * Ottieni utente per username
    */
-  @Get(':id')
-  async getUserById(@Param('id') id: string) {
-    console.log('👤 Getting public profile for user:', id);
+  @Get('username/:username')
+  async getUserByUsername(@Param('username') username: string) {
+    console.log('👤 Getting user by username:', username);
 
-    return await this.microserviceService.get('user', `/users/${id}`);
+    return await this.microserviceService.get(
+      'user',
+      `/users/username/${username}`
+    );
+  }
+
+  /**
+   * GET /api/users
+   * Lista tutti gli utenti con paginazione (protetto)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  async getAllUsers(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10
+  ) {
+    console.log('👥 Getting all users - page:', page, 'limit:', limit);
+
+    return await this.microserviceService.get(
+      'user',
+      `/users?page=${page}&limit=${limit}`
+    );
   }
 
   /**
@@ -110,5 +133,29 @@ export class UserController {
     console.log('👤 Deleting user:', userId);
 
     return await this.microserviceService.delete('user', `/users/${userId}`);
+  }
+
+  /**
+   * GET /api/users/:id
+   * Ottieni profilo utente pubblico per ID
+   * IMPORTANTE: Questa rotta deve essere DOPO tutte le rotte specifiche
+   */
+  @Get(':id')
+  async getUserById(@Param('id') id: string) {
+    console.log('👤 Getting public profile for user ID:', id);
+
+    // Validate ID format (basic validation)
+    if (!id || id.trim().length === 0) {
+      throw new Error('Invalid user ID');
+    }
+
+    try {
+      const result = await this.microserviceService.get('user', `/users/${id}`);
+      console.log('✅ User profile retrieved successfully:', result?.id);
+      return result;
+    } catch (error) {
+      console.error('❌ Error getting user profile:', error);
+      throw error;
+    }
   }
 }

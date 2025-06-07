@@ -1,0 +1,10 @@
+.drawer-open {
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .drawer-open {
+    position: fixed;
+    width: 100%;
+  }
+}

@@ -160,6 +160,18 @@ export class PostController {
   }
 
   /**
+   * GET /api/posts/user/:userId
+   * Ottieni tutti i post di un utente specifico
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('user/:userId')
+  async getUserPosts(@Param('userId') userId: string) {
+    console.log('📝 Getting posts for user:', userId);
+
+    return await this.microserviceService.get('post', `/posts/user/${userId}`);
+  }
+
+  /**
    * POST /api/posts/:id/like
    * Like/Unlike post (protetto) - Gestisce toggle automaticamente
    */

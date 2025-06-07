@@ -1,18 +1,12 @@
-<div class="app-container">
-  <!-- Navigation Bar -->
-  <nav class="navbar" *ngIf="authService.isAuthenticated()">
-    <div class="nav-brand">
-      <h2>SocialNetwork</h2>
-    </div>
-    <div class="nav-links">
-      <a routerLink="/home" routerLinkActive="active">Home</a>
-      <a routerLink="/profile" routerLinkActive="active">Profile</a>
-      <button (click)="logout()" class="logout-btn">Logout</button>
-    </div>
-  </nav>
+<div class="min-h-screen flex flex-col">
+  <!-- Navigation -->
+  <app-navbar></app-navbar>
 
   <!-- Main Content -->
-  <main class="main-content">
+  <main class="flex-grow">
     <router-outlet></router-outlet>
   </main>
+
+  <!-- Footer -->
+  <app-footer></app-footer>
 </div>

@@ -22,7 +22,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
-      MONGODB_LOG_LEVEL: 1
+      MONGODB_LOG_LEVEL: 0
     ports:
       - '27017:27017'
     volumes:

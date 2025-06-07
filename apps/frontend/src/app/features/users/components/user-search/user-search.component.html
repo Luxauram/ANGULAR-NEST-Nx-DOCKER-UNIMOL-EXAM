@@ -1,0 +1,83 @@
+<div class="max-w-4xl mx-auto p-5 md:p-20">
+  <div class="mb-8">
+    <h2 class="text-gray-800 text-2xl font-semibold mb-5">Cerca Utenti</h2>
+    <div class="relative max-w-md">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (input)="onSearchInput($event)"
+        placeholder="Cerca per nome utente o nome..."
+        class="w-full py-3 px-4 pl-10 border-2 border-gray-300 rounded-full text-base outline-none transition-colors duration-300 ease-in-out focus:border-blue-500"
+      />
+      <span
+        class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+        >🔍</span
+      >
+    </div>
+  </div>
+
+  <div class="search-results">
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="text-center py-10 px-5 text-gray-500">
+      <p>Ricerca in corso...</p>
+    </div>
+
+    <!-- Empty state -->
+    <div
+      *ngIf="!isLoading && searchQuery.length === 0"
+      class="text-center py-10 px-5 text-gray-500"
+    >
+      <p>Inizia a digitare per cercare utenti</p>
+    </div>
+
+    <!-- No results -->
+    <div
+      *ngIf="!isLoading && searchQuery.length > 0 && users.length === 0"
+      class="text-center py-10 px-5 text-gray-500"
+    >
+      <p>Nessun utente trovato per "{{ searchQuery }}"</p>
+    </div>
+
+    <!-- Results -->
+    <div
+      *ngIf="!isLoading && users.length > 0"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-5"
+    >
+      <div
+        *ngFor="let user of users"
+        class="bg-white border border-gray-300 rounded-xl p-5 cursor-pointer transition-all duration-300 ease-in-out shadow-sm hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-500 focus:-translate-y-0.5 focus:shadow-lg focus:border-blue-500 focus:outline-none focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
+        tabindex="0"
+        role="button"
+        (click)="viewUserProfile(user.id)"
+        (keyup.enter)="viewUserProfile(user.id)"
+        (keyup.space)="viewUserProfile(user.id)"
+      >
+        <div class="text-center mb-4">
+          <img
+            [src]="getUserAvatar(user)"
+            [alt]="user.username"
+            (error)="onAvatarError($event)"
+            class="w-15 h-15 rounded-full object-cover border-3 border-gray-100 mx-auto"
+          />
+        </div>
+        <div class="user-info">
+          <h3 class="text-gray-800 text-lg font-semibold mb-2">
+            {{ user.username }}
+          </h3>
+          <p *ngIf="user.firstName || user.lastName" class="text-gray-500 mb-1">
+            {{ user.firstName }} {{ user.lastName }}
+          </p>
+          <p
+            *ngIf="user.bio"
+            class="text-gray-500 italic text-sm mb-1 h-10 overflow-hidden text-ellipsis"
+          >
+            {{ user.bio }}
+          </p>
+          <small class="text-gray-400 text-xs">
+            Membro dal {{ formatDate(user.createdAt) }}
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

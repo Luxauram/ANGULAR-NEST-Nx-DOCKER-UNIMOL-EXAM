@@ -1,0 +1,168 @@
+/* Animazioni per le transizioni */
+.form-group {
+  transition: all 0.2s ease;
+}
+
+/* Stili per i campi di input con errori */
+.ng-invalid.ng-touched {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px #ef4444;
+}
+
+.ng-valid.ng-touched {
+  border-color: #10b981;
+}
+
+/* Hover effects per i bottoni */
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.btn-secondary:hover {
+  background-color: #f3f4f6;
+}
+
+/* Stili per il drag and drop */
+.drag-over {
+  border-color: #6366f1 !important;
+  background-color: #f0f9ff;
+}
+
+/* Animazione per le preview delle immagini */
+.image-preview {
+  transition: all 0.3s ease;
+}
+
+.image-preview:hover {
+  transform: scale(1.02);
+}
+
+/* Stili per le checkbox personalizzate */
+.custom-checkbox {
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox:checked {
+  background-color: #6366f1;
+  border-color: #6366f1;
+}
+
+/* Stili per i radio button personalizzati */
+.custom-radio {
+  transition: all 0.2s ease;
+}
+
+.custom-radio:checked {
+  background-color: #6366f1;
+  border-color: #6366f1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .form-container {
+    padding: 1rem;
+  }
+
+  .grid-responsive {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Loading spinner per il submit */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Stili per i messaggi di errore */
+.error-message {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stili per il focus sui campi */
+.form-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Stili per le etichette */
+.form-label {
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Miglioramenti per l'accessibilità */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Stili per gli stati disabilitati */
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Miglioramenti per i separatori delle sezioni */
+.section-divider {
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 3rem;
+  padding-bottom: 3rem;
+}
+
+/* Stili per il contenitore principale */
+.profile-form-container {
+  max-width: 4xl;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Stili per i gruppi di campi */
+.field-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Stili per i titoli delle sezioni */
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.section-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 2.5rem;
+}
