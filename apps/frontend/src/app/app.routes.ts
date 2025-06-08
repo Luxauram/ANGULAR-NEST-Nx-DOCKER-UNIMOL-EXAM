@@ -1,16 +1,18 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './features/auth/components/login/login.component';
-import { RegisterComponent } from './features/auth/components/register/register.component';
-import { HomeComponent } from './features/dashboard/components/home/home.component';
+import { HomeComponent } from './pages/home/home.component';
 import { ProfileComponent } from './pages/profile/profile.component';
-import { AuthGuard } from './core/guards/auth.guard';
 import { UserProfileComponent } from './features/users/components/user-profile/user-profile.component';
-import { RootRedirectGuard } from './core/guards/root-redirect.guard';
-import { GuestGuard } from './core/guards/guest.guard';
 import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
 import { UserSearchComponent } from './features/users/components/user-search/user-search.component';
 import { ProfileUpdateComponent } from './pages/profile-update/profile-update.component';
 import { AboutComponent } from './pages/about/about.component';
+import { UserDiscoverComponent } from './features/users/components/user-discover/user-discover.component';
+import { AuthGuard } from './guards/auth.guard';
+import { GuestGuard } from './guards/guest.guard';
+import { RootRedirectGuard } from './guards/root-redirect.guard';
+import { LoginComponent } from './pages/auth/login/login.component';
+import { RegisterComponent } from './pages/auth/register/register.component';
+import { CreatePostPageComponent } from './pages/create-post/create-post.component';
 
 export const appRoutes: Routes = [
   {
@@ -36,15 +38,20 @@ export const appRoutes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'create/post',
+    component: CreatePostPageComponent,
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'search',
     component: UserSearchComponent,
     canActivate: [AuthGuard],
   },
-  // {
-  //   path: 'feed/explore',
-  //   component: ,
-  //   canActivate: [AuthGuard],
-  // },
+  {
+    path: 'feed/explore',
+    component: UserDiscoverComponent,
+    canActivate: [AuthGuard],
+  },
   {
     path: 'about',
     component: AboutComponent,

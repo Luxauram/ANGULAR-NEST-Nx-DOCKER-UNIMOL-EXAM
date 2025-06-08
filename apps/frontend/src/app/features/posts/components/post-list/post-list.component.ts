@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PostService } from '../../services/post.service';
-import { Post } from '../../../../core/models/post.model';
+import { Post } from '../../../../models/post.model';
+import { PostService } from '../../../../services/post/post.service';
 
 @Component({
   selector: 'app-post-list',

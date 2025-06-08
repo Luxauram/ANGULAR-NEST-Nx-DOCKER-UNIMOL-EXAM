@@ -1,0 +1,513 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+  <!-- Header -->
+  <header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-4">
+          <button
+            type="button"
+            (click)="goBack()"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors duration-200"
+          >
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              ></path>
+            </svg>
+            Home
+          </button>
+          <h1 class="text-2xl font-bold text-gray-900">Crea un nuovo Post</h1>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <button
+            disabled
+            type="button"
+            (click)="loadDraft()"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+          >
+            Carica Bozza
+          </button>
+          <button
+            disabled
+            type="button"
+            (click)="saveDraft()"
+            class="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors duration-200"
+          >
+            Salva Bozza
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Success/Error Messages -->
+    <div class="mb-6 space-y-3">
+      <div
+        *ngIf="successMessage"
+        class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center"
+      >
+        <svg
+          class="w-5 h-5 mr-3 text-green-600"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+        {{ successMessage }}
+      </div>
+
+      <div
+        *ngIf="errorMessage"
+        class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center"
+      >
+        <svg
+          class="w-5 h-5 mr-3 text-red-600"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+        {{ errorMessage }}
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+      <form
+        [formGroup]="postForm"
+        (ngSubmit)="onSubmit()"
+        class="divide-y divide-gray-200"
+      >
+        <!-- Title Section -->
+        <div class="p-8">
+          <div class="space-y-6">
+            <div>
+              <label
+                for="title"
+                class="block text-sm font-semibold text-gray-900 mb-3"
+              >
+                Titolo del Post
+                <span class="text-gray-500 font-normal">(opzionale)</span>
+              </label>
+              <input
+                id="title"
+                type="text"
+                formControlName="title"
+                placeholder="Il titolo del mio post"
+                class="w-full px-4 py-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+              />
+              <div class="text-right text-sm text-gray-500 mt-2">
+                {{ postForm.get('title')?.value?.length || 0 }}/100
+              </div>
+            </div>
+
+            <!-- Category Selection -->
+            <div>
+              <label
+                for="category"
+                class="block text-sm font-semibold text-gray-900 mb-3"
+              >
+                Categoria
+              </label>
+              <select
+                id="category"
+                formControlName="category"
+                class="w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              >
+                <option value="general">Generale</option>
+                <option value="technology">Tecnologia</option>
+                <option value="lifestyle">Stile di Vita</option>
+                <option value="business">Business</option>
+                <option value="entertainment">Intrattenimento</option>
+                <option value="sports">Sport</option>
+                <option value="travel">Viaggi</option>
+                <option value="food">Cibo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Section -->
+        <div class="p-8">
+          <div class="space-y-6">
+            <div>
+              <label
+                for="content"
+                class="block text-sm font-semibold text-gray-900 mb-3"
+              >
+                Contenuto del Post
+                <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                id="content"
+                formControlName="content"
+                placeholder="Cos'hai in mente? Condividi il tuo pensiero..."
+                rows="8"
+                maxlength="2000"
+                class="w-full px-4 py-4 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none placeholder-gray-400"
+              ></textarea>
+
+              <div class="flex justify-between items-center mt-3">
+                <div
+                  class="text-red-500 text-sm"
+                  *ngIf="
+                    postForm.get('content')?.touched &&
+                    postForm.get('content')?.errors
+                  "
+                >
+                  <span *ngIf="postForm.get('content')?.errors?.['required']">
+                    Il post non puo' essere vuoto
+                  </span>
+                  <span *ngIf="postForm.get('content')?.errors?.['minlength']">
+                    Il post deve avere almeno 1 carattere
+                  </span>
+                  <span *ngIf="postForm.get('content')?.errors?.['maxlength']">
+                    Il post è troppo lungo
+                  </span>
+                </div>
+                <div
+                  class="text-sm transition-colors duration-200"
+                  [class.text-red-500]="contentLength > 1800"
+                  [class.text-yellow-600]="
+                    contentLength > 1500 && contentLength <= 1800
+                  "
+                  [class.text-gray-500]="contentLength <= 1500"
+                >
+                  {{ contentLength }}/2000
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Image Upload Section -->
+        <div class="p-8">
+          <div class="space-y-6">
+            <span class="block text-sm font-semibold text-gray-900">
+              Immagini
+              <span class="text-gray-500 font-normal"
+                >(fino a {{ maxImages }} immagini)</span
+              >
+            </span>
+
+            <!-- Upload Area -->
+            <div
+              class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors duration-200"
+              [class.border-blue-400]="canAddMoreImages"
+              [class.bg-gray-50]="!canAddMoreImages"
+              (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave($event)"
+              (drop)="onDrop($event)"
+            >
+              <svg
+                class="w-12 h-12 mx-auto text-gray-400 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                ></path>
+              </svg>
+
+              <div *ngIf="canAddMoreImages; else maxImagesReached">
+                <p class="text-lg font-medium text-gray-700 mb-2">
+                  Trascina le immagini qui
+                </p>
+                <p class="text-gray-500 mb-4">or</p>
+                <label
+                  for="imageUpload"
+                  class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg cursor-pointer transition-colors duration-200"
+                >
+                  <svg
+                    class="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    ></path>
+                  </svg>
+                  Scegli immagini
+                </label>
+                <input
+                  id="imageUpload"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  (change)="onFileSelect($event)"
+                  class="hidden"
+                />
+                <p class="text-sm text-gray-500 mt-3">
+                  PNG, JPG, GIF, WebP fino a 5MB per immagine
+                </p>
+              </div>
+
+              <ng-template #maxImagesReached>
+                <p class="text-lg font-medium text-gray-500">
+                  Numero massimo di immagini raggiunto ({{ maxImages }})
+                </p>
+              </ng-template>
+            </div>
+
+            <!-- Uploaded Images Preview -->
+            <div
+              *ngIf="uploadedImages.length > 0"
+              class="grid grid-cols-2 md:grid-cols-4 gap-4"
+            >
+              <div
+                *ngFor="let image of uploadedImages"
+                class="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-gray-300 transition-colors duration-200"
+              >
+                <img
+                  [src]="image.preview"
+                  [alt]="image.file.name"
+                  class="w-full h-32 object-cover"
+                />
+                <div
+                  class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center"
+                >
+                  <button
+                    type="button"
+                    (click)="removeImage(image.id)"
+                    class="opacity-0 group-hover:opacity-100 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-all duration-200"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+                <div
+                  class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white text-xs p-2 truncate"
+                >
+                  {{ image.file.name }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tags Section -->
+        <div class="p-8">
+          <div class="space-y-6">
+            <span class="block text-sm font-semibold text-gray-900">Tags</span>
+
+            <div class="space-y-4">
+              <!-- Current Tags -->
+              <div
+                *ngIf="postForm.get('tags')?.value?.length > 0"
+                class="flex flex-wrap gap-2"
+              >
+                <span
+                  *ngFor="let tag of postForm.get('tags')?.value"
+                  class="inline-flex items-center bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium border border-blue-200 hover:border-blue-300 transition-colors duration-200"
+                >
+                  #{{ tag }}
+                  <button
+                    type="button"
+                    class="ml-2 text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                    (click)="removeTag(tag)"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      ></path>
+                    </svg>
+                  </button>
+                </span>
+              </div>
+
+              <!-- Add Tag Input -->
+              <div class="relative">
+                <input
+                  type="text"
+                  placeholder="Aggiungi un tag e premi spazio (max 30 caratteri)"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                  #tagInput
+                  (keyup.space)="addTag(tagInput.value); tagInput.value = ''"
+                  maxlength="30"
+                />
+                <div
+                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                    ></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div class="p-8">
+          <div class="space-y-6">
+            <h3 class="text-sm font-semibold text-gray-900">
+              Impostazioni Post
+            </h3>
+
+            <div class="space-y-4">
+              <!-- Privacy Toggle -->
+              <label
+                class="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+              >
+                <div class="flex items-center">
+                  <div class="text-sm">
+                    <p class="font-medium text-gray-900">
+                      Rendi pubblico il post
+                    </p>
+                    <p class="text-gray-500">Tutti possono vedere il post</p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  formControlName="isPublic"
+                  class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 transition-colors duration-200"
+                />
+              </label>
+
+              <!-- Scheduled Publishing -->
+              <!-- <div class="p-4 border border-gray-200 rounded-xl">
+                <label
+                  for="scheduledAt"
+                  class="block text-sm font-medium text-gray-900 mb-2"
+                >
+                  Schedule for later
+                  <span class="text-gray-500 font-normal">(optional)</span>
+                </label>
+                <input
+                  id="scheduledAt"
+                  type="datetime-local"
+                  formControlName="scheduledAt"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                />
+              </div> -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="px-8 py-6 bg-gray-50 flex items-center justify-between">
+          <button
+            type="button"
+            (click)="clearDraft()"
+            class="px-6 py-3 text-sm font-medium text-gray-700 bg-red-600/20 border-8 border-black rounded-lg hover:bg-red-600 hover:text-white transition-colors duration-200"
+          >
+            Reset
+          </button>
+
+          <div class="flex items-center space-x-4">
+            <button
+              disabled
+              type="button"
+              (click)="saveDraft()"
+              class="px-6 py-3 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors duration-200"
+            >
+              Salva Bozza
+            </button>
+
+            <button
+              type="submit"
+              [disabled]="postForm.invalid || isLoading"
+              class="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100"
+            >
+              <span *ngIf="!isLoading" class="flex items-center">
+                <svg
+                  class="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  ></path>
+                </svg>
+                Pubblica
+              </span>
+              <span *ngIf="isLoading" class="flex items-center">
+                <svg
+                  class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Pubblicando...
+              </span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>

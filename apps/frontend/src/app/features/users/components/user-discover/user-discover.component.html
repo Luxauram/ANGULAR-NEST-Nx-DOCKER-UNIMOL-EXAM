@@ -1,0 +1,193 @@
+<div class="user-discover-container">
+  <!-- Header -->
+  <div class="discover-header">
+    <h2>
+      <i class="icon-users"></i>
+      Discover Users
+    </h2>
+    <p class="discover-subtitle">Find and connect with interesting people</p>
+
+    <!-- Refresh Button -->
+    <button
+      class="refresh-btn"
+      (click)="refreshDiscovery()"
+      [disabled]="isLoading"
+      title="Refresh suggestions"
+    >
+      <i class="icon-refresh" [class.spinning]="isLoading"></i>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-container">
+    <div class="search-input-wrapper">
+      <i class="icon-search"></i>
+      <input
+        type="text"
+        placeholder="Search users..."
+        class="search-input"
+        #searchInput
+        (input)="searchUsers(searchInput.value)"
+      />
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Finding awesome people for you...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="error-container">
+    <i class="icon-alert"></i>
+    <p>{{ error }}</p>
+    <button class="retry-btn" (click)="refreshDiscovery()">Try Again</button>
+  </div>
+
+  <!-- Users Grid -->
+  <div *ngIf="!isLoading && !error && users.length > 0" class="users-grid">
+    <div
+      *ngFor="let user of users; trackBy: trackByUserId"
+      class="user-card"
+      [class.following]="user.isFollowing"
+    >
+      <!-- User Avatar -->
+      <div
+        class="user-avatar-container"
+        (click)="viewProfile(user)"
+        tabindex="0"
+        role="button"
+        [attr.aria-label]="'Visualizza profilo di ' + user.username"
+      >
+        <img
+          [src]="getAvatarUrl(user)"
+          [alt]="user.username + ' avatar'"
+          class="user-avatar"
+          loading="lazy"
+        />
+        <div class="avatar-overlay">
+          <i class="icon-eye"></i>
+        </div>
+      </div>
+
+      <!-- User Info -->
+      <div class="user-info">
+        <h3
+          class="user-name"
+          (click)="viewProfile(user)"
+          tabindex="0"
+          role="button"
+          [attr.aria-label]="'Visualizza profilo di ' + user.username"
+        >
+          {{ user.username }}
+        </h3>
+        <p class="user-username">&#64;{{ user.username }}</p>
+
+        <p *ngIf="user.bio" class="user-bio">
+          {{ user.bio }}
+        </p>
+
+        <!-- User Stats -->
+        <div class="user-stats">
+          <div class="stat">
+            <span class="stat-number">{{
+              formatCount(user.followersCount)
+            }}</span>
+            <span class="stat-label">Followers</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">{{
+              formatCount(user.followingCount)
+            }}</span>
+            <span class="stat-label">Following</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">{{ formatCount(user.postsCount) }}</span>
+            <span class="stat-label">Posts</span>
+          </div>
+        </div>
+
+        <!-- Common Tags (if available) -->
+        <div
+          *ngIf="user.commonTags && user.commonTags.length > 0"
+          class="common-tags"
+        >
+          <span class="common-tags-label">Common interests:</span>
+          <div class="tags">
+            <span *ngFor="let tag of user.commonTags.slice(0, 3)" class="tag">
+              {{ tag }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Mutual Follows -->
+        <div
+          *ngIf="user.mutualFollowsCount && user.mutualFollowsCount > 0"
+          class="mutual-follows"
+        >
+          <i class="icon-users"></i>
+          {{ user.mutualFollowsCount }} mutual connections
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="user-actions">
+        <button
+          class="view-profile-btn"
+          (click)="viewProfile(user)"
+          title="View Profile"
+        >
+          <i class="icon-user"></i>
+          Profile
+        </button>
+
+        <button
+          class="follow-btn"
+          [class.following]="user.isFollowing"
+          (click)="toggleFollow(user)"
+          [title]="user.isFollowing ? 'Unfollow' : 'Follow'"
+        >
+          <i
+            [class]="user.isFollowing ? 'icon-user-minus' : 'icon-user-plus'"
+          ></i>
+          {{ user.isFollowing ? 'Following' : 'Follow' }}
+        </button>
+      </div>
+
+      <!-- Activity Indicator -->
+      <div
+        class="activity-indicator"
+        [title]="'Last active: ' + getFormattedDate(user.lastActiveAt)"
+      >
+        <div
+          class="activity-dot"
+          [class.active]="isRecentlyActive(user.lastActiveAt)"
+        ></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && !error && users.length === 0" class="empty-state">
+    <i class="icon-users-large"></i>
+    <h3>No users found</h3>
+    <p>Try refreshing or adjusting your search criteria.</p>
+    <button class="refresh-btn" (click)="refreshDiscovery()">
+      <i class="icon-refresh"></i>
+      Refresh Suggestions
+    </button>
+  </div>
+
+  <!-- Load More Button -->
+  <div
+    *ngIf="users.length > 0 && users.length >= filters.limit"
+    class="load-more-container"
+  >
+    <button class="load-more-btn" (click)="refreshDiscovery()">
+      <i class="icon-more"></i>
+      Discover More Users
+    </button>
+  </div>
+</div>

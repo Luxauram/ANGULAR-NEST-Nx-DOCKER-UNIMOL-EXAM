@@ -9,9 +9,9 @@ import {
   switchMap,
   of,
 } from 'rxjs';
-import { UserService } from '../../services/user.service';
-import { User } from '../../../../core/models/user.model';
-import { ImageService } from '../../services/image.service';
+import { User } from '../../../../models/user.model';
+import { ImageService } from '../../../../services/user/image.service';
+import { UserService } from '../../../../services/user/user.service';
 
 @Component({
   selector: 'app-user-search',

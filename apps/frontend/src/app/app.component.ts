@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService } from './core/services/auth.service';
+import { AuthService } from './services/auth/auth.service';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from './shared/components/layout/navbar/navbar.component';
-import { FooterComponent } from './shared/components/layout/footer/footer.component';
+import { FooterComponent } from './shared/layout/footer/footer.component';
+import { NavbarComponent } from './shared/layout/navbar/navbar.component';
 
 @Component({
   selector: 'app-root',

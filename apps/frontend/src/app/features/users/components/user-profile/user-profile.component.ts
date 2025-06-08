@@ -2,19 +2,21 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UserService } from '../../services/user.service';
-import { SocialService } from '../../services/social.service';
-import { PostService } from '../../../posts/services/post.service';
-import { User } from '../../../../core/models/user.model';
-import { Post } from '../../../../core/models/post.model';
-import { AuthService } from '../../../../core/services/auth.service';
+import { User } from '../../../../models/user.model';
+import { Post } from '../../../../models/post.model';
+import { AuthService } from '../../../../services/auth/auth.service';
 import { firstValueFrom } from 'rxjs';
-import { ImageService } from '../../services/image.service';
+import { ImageService } from '../../../../services/user/image.service';
+import { PostService } from '../../../../services/post/post.service';
+import { SocialService } from '../../../../services/user/social.service';
+import { UserService } from '../../../../services/user/user.service';
+import { CoverPhotoComponent } from '../../../../shared/components/user/cover-photo.component';
+import { AvatarComponent } from '../../../../shared/components/user/avatar.component';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AvatarComponent, CoverPhotoComponent],
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.css'],
 })

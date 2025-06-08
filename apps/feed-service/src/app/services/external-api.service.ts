@@ -21,12 +21,24 @@ export class ExternalApiService {
     process.env.SOCIAL_GRAPH_SERVICE_DOCKER ||
     'http://host.docker.internal:3004';
 
+  private userDetailsCache = new Map<
+    string,
+    { data: any; timestamp: number }
+  >();
+  private readonly CACHE_TTL = 5 * 60 * 1000;
+
   constructor(private readonly httpService: HttpService) {}
 
   // Recupera gli utenti seguiti da un utente
   async getFollowing(userId: string): Promise<string[]> {
     try {
-      const url = `${this.SOCIAL_GRAPH_SERVICE_URL}/api/social/following/${userId}`;
+      // Validazione input
+      if (!userId || typeof userId !== 'string' || userId.length !== 36) {
+        this.logger.error(`getFollowing: userId non valido: ${userId}`);
+        return [];
+      }
+
+      const url = `${this.SOCIAL_GRAPH_SERVICE_URL}/following/${userId}`;
       this.logger.log(`Chiamata API: ${url}`);
 
       const response = await firstValueFrom(
@@ -40,23 +52,26 @@ export class ExternalApiService {
         response.data ||
         [];
 
-      // 🔍 DEBUG LOG per controllare il tipo di ogni elemento
-      console.log('🔍 Following raw response:', following);
-      following.forEach((id, index) => {
-        console.log(`🔍 following[${index}]:`, typeof id, id);
-        if (Array.isArray(id)) {
-          console.error(`❌ ERRORE: following[${index}] è un array!`, id);
+      // Validazione e filtraggio degli ID
+      const validFollowing = following.filter((id: any) => {
+        if (!id || typeof id !== 'string' || id.length !== 36) {
+          this.logger.warn(
+            `Following ID non valido per utente ${userId}: ${id}`
+          );
+          return false;
         }
+        return true;
       });
 
-      this.logger.log(`Utente ${userId} segue ${following.length} persone`);
-      return following;
+      this.logger.log(
+        `Utente ${userId} segue ${validFollowing.length} persone valide`
+      );
+      return validFollowing;
     } catch (error) {
       this.logger.error(
         `Errore recuperando following per utente ${userId}:`,
         error.response?.data || error.message
       );
-      // Se il servizio non è disponibile, ritorna array vuoto
       return [];
     }
   }
@@ -66,14 +81,24 @@ export class ExternalApiService {
     userId: string
   ): Promise<{ id: string; username: string; email?: string } | null> {
     try {
-      // 🔍 DEBUG LOG
-      console.log('🔍 getUserDetails chiamato con:', typeof userId, userId);
+      // Validazione input
+      if (!userId || typeof userId !== 'string') {
+        this.logger.error(`getUserDetails: userId non valido: ${userId}`);
+        return null;
+      }
+
       if (Array.isArray(userId)) {
-        console.error(
-          '❌ ERRORE: getUserDetails ricevuto array invece di stringa!',
+        this.logger.error(
+          'getUserDetails ricevuto array invece di stringa!',
           userId
         );
         return null;
+      }
+
+      // Controlla cache
+      const cached = this.userDetailsCache.get(userId);
+      if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+        return cached.data;
       }
 
       const url = `${this.USER_SERVICE_URL}/users/${userId}`;
@@ -85,16 +110,29 @@ export class ExternalApiService {
 
       const userData = response.data?.data || response.data;
 
-      return {
+      const userDetails = {
         id: userData.id,
         username: userData.username,
         email: userData.email,
       };
+
+      // Salva in cache
+      this.userDetailsCache.set(userId, {
+        data: userDetails,
+        timestamp: Date.now(),
+      });
+
+      return userDetails;
     } catch (error) {
-      this.logger.error(
-        `Errore recuperando dettagli utente ${userId}:`,
-        error.response?.data || error.message
-      );
+      // Log diversificato per 404 vs altri errori
+      if (error.response?.status === 404) {
+        this.logger.warn(`Utente ${userId} non trovato (404)`);
+      } else {
+        this.logger.error(
+          `Errore recuperando dettagli utente ${userId}:`,
+          error.response?.data || error.message
+        );
+      }
       return null;
     }
   }
@@ -102,11 +140,15 @@ export class ExternalApiService {
   // Recupera i post di un utente
   async getUserPosts(userId: string, limit: number = 50): Promise<any[]> {
     try {
-      // 🔍 DEBUG LOG
-      console.log('🔍 getUserPosts chiamato con:', typeof userId, userId);
+      // Validazione input
+      if (!userId || typeof userId !== 'string') {
+        this.logger.error(`getUserPosts: userId non valido: ${userId}`);
+        return [];
+      }
+
       if (Array.isArray(userId)) {
-        console.error(
-          '❌ ERRORE: getUserPosts ricevuto array invece di stringa!',
+        this.logger.error(
+          'getUserPosts ricevuto array invece di stringa!',
           userId
         );
         return [];
@@ -123,9 +165,20 @@ export class ExternalApiService {
       const posts = response.data?.data || response.data || [];
       this.logger.log(`Recuperati ${posts.length} post per utente ${userId}`);
 
+      // Validazione post
       const validPosts = posts.filter((post) => {
-        const userId = post.userId || post.authorId;
-        return userId && userId.length === 36 && userId.includes('-');
+        const postUserId = post.userId || post.authorId;
+        if (
+          !postUserId ||
+          typeof postUserId !== 'string' ||
+          postUserId.length !== 36
+        ) {
+          this.logger.warn(
+            `Post con userId non valido: ${post.id} - ${postUserId}`
+          );
+          return false;
+        }
+        return true;
       });
 
       return validPosts;
@@ -183,13 +236,37 @@ export class ExternalApiService {
       );
 
       const posts = response.data?.data || response.data || [];
-      this.logger.log(`Recuperati ${posts.length} post recenti`);
+      this.logger.log(
+        `Recuperati ${posts.length} post recenti dal Post Service`
+      );
 
+      // Validazione e filtraggio post
       const validPosts = posts.filter((post) => {
+        // Controllo esistenza post ID
+        if (!post.id && !post._id) {
+          this.logger.warn(`Post senza ID trovato`);
+          return false;
+        }
+
+        // Controllo userId
         const userId = post.userId || post.authorId;
-        return userId && userId.length === 36 && userId.includes('-');
+        if (!userId || typeof userId !== 'string' || userId.length !== 36) {
+          this.logger.warn(`Post ${post.id} ha userId non valido: ${userId}`);
+          return false;
+        }
+
+        // Controllo contenuto
+        if (!post.content || typeof post.content !== 'string') {
+          this.logger.warn(`Post ${post.id} ha contenuto non valido`);
+          return false;
+        }
+
+        return true;
       });
 
+      this.logger.log(
+        `${validPosts.length} post recenti validi su ${posts.length} totali`
+      );
       return validPosts;
     } catch (error) {
       this.logger.error(
@@ -241,26 +318,23 @@ export class ExternalApiService {
   // Genera il feed aggregando i post degli utenti seguiti
   async generateFeedItems(userId: string): Promise<FeedItem[]> {
     try {
-      // 🔍 DEBUG LOG
-      console.log('🔍 generateFeedItems chiamato con:', typeof userId, userId);
-      if (Array.isArray(userId)) {
-        console.error(
-          '❌ ERRORE: generateFeedItems ricevuto array invece di stringa!',
-          userId
-        );
-        throw new Error('userId non può essere un array');
+      // Validazione input
+      if (!userId || typeof userId !== 'string') {
+        this.logger.error(`generateFeedItems: userId non valido: ${userId}`);
+        return [];
       }
 
-      const followingIds = await this.getFollowing(userId);
+      if (Array.isArray(userId)) {
+        this.logger.error(
+          'generateFeedItems ricevuto array invece di stringa!',
+          userId
+        );
+        return [];
+      }
 
-      // 🔍 DEBUG LOG per ogni ID nell'array following
-      console.log('🔍 followingIds recuperati:', followingIds);
-      followingIds.forEach((id, index) => {
-        console.log(`🔍 followingIds[${index}]:`, typeof id, id);
-        if (Array.isArray(id)) {
-          console.error(`❌ ERRORE: followingIds[${index}] è un array!`, id);
-        }
-      });
+      this.logger.log(`Generazione feed per utente ${userId}`);
+
+      const followingIds = await this.getFollowing(userId);
 
       if (followingIds.length === 0) {
         this.logger.log(`Utente ${userId} non segue nessuno`);
@@ -269,69 +343,111 @@ export class ExternalApiService {
 
       this.logger.log(`Utente ${userId} segue ${followingIds.length} persone`);
 
-      // 2. Recupera i post di tutti gli utenti seguiti
+      // Recupera i post di tutti gli utenti seguiti con gestione errori migliorata
       const allPosts = [];
+      const batchSize = 3; // Ridotto per evitare sovraccarico
 
-      // Processa gli utenti in batch per performance
-      const batchSize = 5;
       for (let i = 0; i < followingIds.length; i += batchSize) {
         const batch = followingIds.slice(i, i + batchSize);
 
         const batchPromises = batch.map(async (followedUserId) => {
-          // 🔍 DEBUG LOG
-          console.log(
-            '🔍 Processando followedUserId:',
-            typeof followedUserId,
-            followedUserId
-          );
-          if (Array.isArray(followedUserId)) {
-            console.error(
-              '❌ ERRORE: followedUserId è un array nel batch!',
-              followedUserId
+          try {
+            // Validazione aggiuntiva
+            if (!followedUserId || typeof followedUserId !== 'string') {
+              this.logger.warn(
+                `Skipping invalid followedUserId: ${followedUserId}`
+              );
+              return [];
+            }
+
+            // Recupera post e dettagli utente in parallelo
+            const [posts, userDetails] = await Promise.allSettled([
+              this.getUserPosts(followedUserId, 10), // Ridotto numero post per performance
+              this.getUserDetails(followedUserId),
+            ]);
+
+            // Gestione risultati
+            const userPostsResult =
+              posts.status === 'fulfilled' ? posts.value : [];
+            const userDetailsResult =
+              userDetails.status === 'fulfilled' ? userDetails.value : null;
+
+            if (!userDetailsResult) {
+              this.logger.warn(
+                `Dettagli utente non disponibili per ${followedUserId}`
+              );
+              return [];
+            }
+
+            if (userPostsResult.length === 0) {
+              return [];
+            }
+
+            return userPostsResult.map((post) => ({
+              ...post,
+              userId: userDetailsResult.id,
+              username: userDetailsResult.username,
+            }));
+          } catch (error) {
+            this.logger.error(
+              `Errore processando utente ${followedUserId}:`,
+              error.message
             );
             return [];
           }
-
-          // Recupera i post dell'utente seguito
-          const [posts, userDetails] = await Promise.all([
-            this.getUserPosts(followedUserId, 20),
-            this.getUserDetails(followedUserId),
-          ]);
-
-          if (userDetails && posts.length > 0) {
-            return posts.map((post) => ({
-              ...post,
-              userId: userDetails.id,
-              username: userDetails.username,
-            }));
-          }
-          return [];
         });
 
-        const batchResults = await Promise.all(batchPromises);
-        allPosts.push(...batchResults.flat());
+        try {
+          const batchResults = await Promise.all(batchPromises);
+          allPosts.push(...batchResults.flat());
+        } catch (error) {
+          this.logger.error(
+            `Errore processando batch ${i}-${i + batchSize}:`,
+            error.message
+          );
+        }
       }
 
-      // 3. Trasforma in FeedItem e ordina per data
+      // Trasforma in FeedItem e ordina per data
       const feedItems: FeedItem[] = allPosts
-        .filter((post) => post && post.id) // Filtra post validi
+        .filter((post) => {
+          // Validazione finale dei post
+          if (!post || !post.id || !post.userId || !post.content) {
+            this.logger.warn(
+              `Post non valido filtrato durante la creazione del feed`
+            );
+            return false;
+          }
+
+          // Validazione username
+          if (!post.username || typeof post.username !== 'string') {
+            this.logger.warn(`Post ${post.id} senza username valido`);
+            return false;
+          }
+
+          return true;
+        })
         .map((post) => ({
           postId: post.id || post._id,
           userId: post.userId,
           username: post.username,
           content: post.content,
-          createdAt: new Date(post.createdAt),
+          createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
           updatedAt: post.updatedAt ? new Date(post.updatedAt) : undefined,
         }))
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()) // Più recenti prima
         .slice(0, 100); // Limitiamo a 100 post per performance
 
       this.logger.log(
-        `Feed generato per utente ${userId}: ${feedItems.length} items`
+        `Feed generato per utente ${userId}: ${feedItems.length} items da ${allPosts.length} post totali`
       );
+
       return feedItems;
     } catch (error) {
-      this.logger.error(`Errore generando feed per utente ${userId}:`, error);
+      this.logger.error(
+        `Errore generando feed per utente ${userId}:`,
+        error.message || error
+      );
       throw new HttpException(
         'Errore generando il feed',
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -342,7 +458,13 @@ export class ExternalApiService {
   // Recupera i followers di un utente (per invalidare i feed quando posta)
   async getFollowers(userId: string): Promise<string[]> {
     try {
-      const url = `${this.SOCIAL_GRAPH_SERVICE_URL}/api/social/followers/${userId}`;
+      // Validazione input
+      if (!userId || typeof userId !== 'string' || userId.length !== 36) {
+        this.logger.error(`getFollowers: userId non valido: ${userId}`);
+        return [];
+      }
+
+      const url = `${this.SOCIAL_GRAPH_SERVICE_URL}/followers/${userId}`;
       this.logger.log(`Chiamata API: ${url}`);
 
       const response = await firstValueFrom(
@@ -355,8 +477,21 @@ export class ExternalApiService {
         response.data ||
         [];
 
-      this.logger.log(`Utente ${userId} ha ${followers.length} followers`);
-      return followers;
+      // Validazione dei followers ID
+      const validFollowers = followers.filter((id: any) => {
+        if (!id || typeof id !== 'string' || id.length !== 36) {
+          this.logger.warn(
+            `Follower ID non valido per utente ${userId}: ${id}`
+          );
+          return false;
+        }
+        return true;
+      });
+
+      this.logger.log(
+        `Utente ${userId} ha ${validFollowers.length} followers validi`
+      );
+      return validFollowers;
     } catch (error) {
       this.logger.error(
         `Errore recuperando followers per utente ${userId}:`,
@@ -364,5 +499,19 @@ export class ExternalApiService {
       );
       return [];
     }
+  }
+
+  // Metodo di utilità per pulire la cache utenti
+  clearUserCache(): void {
+    this.userDetailsCache.clear();
+    this.logger.log('Cache utenti pulita');
+  }
+
+  // Metodo per ottenere statistiche della cache
+  getCacheStats(): { size: number; ttl: number } {
+    return {
+      size: this.userDetailsCache.size,
+      ttl: this.CACHE_TTL,
+    };
   }
 }

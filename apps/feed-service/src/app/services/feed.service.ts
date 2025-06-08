@@ -13,6 +13,213 @@ export class FeedService {
     private readonly externalApiService: ExternalApiService
   ) {}
 
+  // Post più recenti (da tutti gli utenti)
+  async getRecent(
+    limit: number = 20,
+    offset: number = 0
+  ): Promise<{ items: FeedItem[]; total: number }> {
+    try {
+      this.logger.log(
+        `Recupero post recenti (limit: ${limit}, offset: ${offset})`
+      );
+
+      // Recupera post recenti dal post service
+      const recentPostsData = await this.externalApiService.getRecentPosts(
+        limit,
+        offset
+      );
+
+      if (!recentPostsData || recentPostsData.length === 0) {
+        this.logger.log('Nessun post recente trovato');
+        return { items: [], total: 0 };
+      }
+
+      // Trasforma in FeedItem con dettagli utente - MIGLIORATO
+      const feedItems: FeedItem[] = [];
+      const userDetailsCache = new Map<string, any>();
+
+      for (const post of recentPostsData) {
+        const userId = post.userId || post.authorId;
+
+        // Validazione ID utente
+        if (!userId || typeof userId !== 'string' || userId.length !== 36) {
+          this.logger.warn(`Post ${post.id} ha userId non valido: ${userId}`);
+          continue;
+        }
+
+        // Cache dei dettagli utente per evitare chiamate duplicate
+        let userDetails = userDetailsCache.get(userId);
+
+        if (!userDetails) {
+          try {
+            userDetails = await this.externalApiService.getUserDetails(userId);
+            if (userDetails) {
+              userDetailsCache.set(userId, userDetails);
+            }
+          } catch (error) {
+            this.logger.warn(
+              `Impossibile recuperare dettagli per utente ${userId}: ${error.message}`
+            );
+            continue; // Salta questo post se l'utente non esiste
+          }
+        }
+
+        if (userDetails) {
+          try {
+            feedItems.push({
+              postId: post.id || post._id,
+              userId: userDetails.id,
+              username: userDetails.username,
+              content: post.content,
+              createdAt: new Date(post.createdAt),
+              updatedAt: post.updatedAt ? new Date(post.updatedAt) : undefined,
+            });
+          } catch (error) {
+            this.logger.warn(
+              `Errore creando FeedItem per post ${post.id}: ${error.message}`
+            );
+          }
+        }
+      }
+
+      // Ordina per data più recente
+      feedItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+      this.logger.log(
+        `Recuperati ${feedItems.length} post recenti validi su ${recentPostsData.length} totali`
+      );
+
+      return {
+        items: feedItems,
+        total: feedItems.length,
+      };
+    } catch (error) {
+      this.logger.error(`Errore recuperando post recenti:`, error);
+      // Ritorna array vuoto invece di throw per non bloccare l'app
+      return {
+        items: [],
+        total: 0,
+      };
+    }
+  }
+
+  // Post in tendenza
+  async getTrending(
+    limit: number = 10,
+    timeframe: string = '24h'
+  ): Promise<{ items: FeedItem[]; timeframe: string; totalItems: number }> {
+    try {
+      this.logger.log(
+        `Recupero trending posts (${timeframe}, limit: ${limit})`
+      );
+
+      // Prova prima con cache
+      const cacheKey = `trending:${timeframe}:${limit}`;
+      const cached = await this.redisService.getGenericCache(cacheKey);
+
+      if (cached) {
+        this.logger.log('Trending posts recuperati da cache');
+        return JSON.parse(cached);
+      }
+
+      // Recupera post trending dal post service
+      const trendingPostsData = await this.externalApiService.getTrendingPosts(
+        limit,
+        timeframe
+      );
+
+      if (!trendingPostsData || trendingPostsData.length === 0) {
+        this.logger.log('Nessun post trending trovato');
+        const emptyResult = { items: [], timeframe, totalItems: 0 };
+        // Salva risultato vuoto in cache per 5 minuti
+        await this.redisService.setGenericCache(
+          cacheKey,
+          JSON.stringify(emptyResult),
+          300
+        );
+        return emptyResult;
+      }
+
+      // Trasforma in FeedItem con dettagli utente - MIGLIORATO
+      const feedItems: FeedItem[] = [];
+      const userDetailsCache = new Map<string, any>();
+
+      for (const post of trendingPostsData) {
+        const userId = post.userId || post.authorId;
+
+        // Validazione ID utente
+        if (!userId || typeof userId !== 'string' || userId.length !== 36) {
+          this.logger.warn(
+            `Post trending ${post.id} ha userId non valido: ${userId}`
+          );
+          continue;
+        }
+
+        // Cache dei dettagli utente
+        let userDetails = userDetailsCache.get(userId);
+
+        if (!userDetails) {
+          try {
+            userDetails = await this.externalApiService.getUserDetails(userId);
+            if (userDetails) {
+              userDetailsCache.set(userId, userDetails);
+            }
+          } catch (error) {
+            this.logger.warn(
+              `Impossibile recuperare dettagli per utente ${userId}: ${error.message}`
+            );
+            continue;
+          }
+        }
+
+        if (userDetails) {
+          try {
+            feedItems.push({
+              postId: post.id || post._id,
+              userId: userDetails.id,
+              username: userDetails.username,
+              content: post.content,
+              createdAt: new Date(post.createdAt),
+              updatedAt: post.updatedAt ? new Date(post.updatedAt) : undefined,
+            });
+          } catch (error) {
+            this.logger.warn(
+              `Errore creando FeedItem per post trending ${post.id}: ${error.message}`
+            );
+          }
+        }
+      }
+
+      // Ordina per data più recente
+      feedItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+      const result = {
+        items: feedItems,
+        timeframe,
+        totalItems: feedItems.length,
+      };
+
+      // Salva in cache per 10 minuti
+      await this.redisService.setGenericCache(
+        cacheKey,
+        JSON.stringify(result),
+        600
+      );
+
+      this.logger.log(
+        `Recuperati ${feedItems.length} trending posts validi su ${trendingPostsData.length} totali`
+      );
+      return result;
+    } catch (error) {
+      this.logger.error(`Errore recuperando trending posts:`, error);
+      return {
+        items: [],
+        timeframe,
+        totalItems: 0,
+      };
+    }
+  }
+
   // Recupera il feed di un utente (cache-first)
   async getFeed(
     userId: string,
@@ -20,6 +227,11 @@ export class FeedService {
     offset: number = 0
   ): Promise<UserFeed> {
     try {
+      // Validazione userId
+      if (!userId || typeof userId !== 'string' || userId.length !== 36) {
+        throw new Error(`UserId non valido: ${userId}`);
+      }
+
       this.logger.log(
         `Richiesta feed per utente ${userId} (limit: ${limit}, offset: ${offset})`
       );
@@ -62,13 +274,24 @@ export class FeedService {
       return feed;
     } catch (error) {
       this.logger.error(`Errore recuperando feed per utente ${userId}:`, error);
-      throw error;
+      // Ritorna feed vuoto invece di throw
+      return {
+        userId,
+        items: [],
+        lastUpdated: new Date(),
+        totalItems: 0,
+      };
     }
   }
 
   // Rigenera il feed dell'utente
   async refreshFeed(userId: string): Promise<void> {
     try {
+      // Validazione userId
+      if (!userId || typeof userId !== 'string' || userId.length !== 36) {
+        throw new Error(`UserId non valido: ${userId}`);
+      }
+
       this.logger.log(`Rigenerazione feed per utente ${userId}`);
 
       // 1. Genera i nuovi item del feed
@@ -86,6 +309,39 @@ export class FeedService {
     }
   }
 
+  // Timeline cronologica dell'utente
+  async getTimeline(
+    userId: string,
+    limit: number = 20,
+    offset: number = 0
+  ): Promise<UserFeed> {
+    try {
+      // Validazione userId
+      if (!userId || typeof userId !== 'string' || userId.length !== 36) {
+        throw new Error(`UserId non valido: ${userId}`);
+      }
+
+      this.logger.log(`Generazione timeline per utente ${userId}`);
+
+      // Per ora usa la stessa logica del feed, ma potremmo differenziare
+      const timeline = await this.getFeed(userId, limit, offset);
+
+      return timeline;
+    } catch (error) {
+      this.logger.error(
+        `Errore generando timeline per utente ${userId}:`,
+        error
+      );
+      // Ritorna timeline vuota invece di throw
+      return {
+        userId,
+        items: [],
+        lastUpdated: new Date(),
+        totalItems: 0,
+      };
+    }
+  }
+
   // Invalida il feed dell'utente
   async invalidateFeed(userId: string): Promise<void> {
     try {
@@ -94,160 +350,6 @@ export class FeedService {
     } catch (error) {
       this.logger.error(`Errore invalidando feed per utente ${userId}:`, error);
       throw error;
-    }
-  }
-
-  // Timeline cronologica dell'utente (tutti i post recenti degli utenti seguiti)
-  async getTimeline(
-    userId: string,
-    limit: number = 20,
-    offset: number = 0
-  ): Promise<UserFeed> {
-    try {
-      this.logger.log(`Generazione timeline per utente ${userId}`);
-
-      // Per ora usa la stessa logica del feed, ma potremmo differenziare
-      // La timeline potrebbe includere più post o avere una logica diversa
-      const timeline = await this.getFeed(userId, limit, offset);
-
-      return {
-        ...timeline,
-        // Potremmo aggiungere metadata specifici per timeline
-      };
-    } catch (error) {
-      this.logger.error(
-        `Errore generando timeline per utente ${userId}:`,
-        error
-      );
-      throw error;
-    }
-  }
-
-  // Post in tendenza (trending)
-  async getTrending(
-    limit: number = 10,
-    timeframe: string = '24h'
-  ): Promise<{ items: FeedItem[]; timeframe: string; totalItems: number }> {
-    try {
-      this.logger.log(
-        `Recupero trending posts (${timeframe}, limit: ${limit})`
-      );
-
-      // Prova prima con cache
-      const cacheKey = `trending:${timeframe}:${limit}`;
-      const cached = await this.redisService.getGenericCache(cacheKey);
-
-      if (cached) {
-        this.logger.log('Trending posts recuperati da cache');
-        return JSON.parse(cached);
-      }
-
-      // Recupera post trending dal post service
-      const trendingPostsData = await this.externalApiService.getTrendingPosts(
-        limit,
-        timeframe
-      );
-
-      // Trasforma in FeedItem con dettagli utente
-      const feedItems: FeedItem[] = [];
-
-      for (const post of trendingPostsData) {
-        const userDetails = await this.externalApiService.getUserDetails(
-          post.userId || post.authorId
-        );
-
-        if (userDetails) {
-          feedItems.push({
-            postId: post.id || post._id,
-            userId: userDetails.id,
-            username: userDetails.username,
-            content: post.content,
-            createdAt: new Date(post.createdAt),
-            updatedAt: post.updatedAt ? new Date(post.updatedAt) : undefined,
-          });
-        }
-      }
-
-      // Ordina per data più recente
-      feedItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-      const result = {
-        items: feedItems,
-        timeframe,
-        totalItems: feedItems.length,
-      };
-
-      // Salva in cache per 10 minuti
-      await this.redisService.setGenericCache(
-        cacheKey,
-        JSON.stringify(result),
-        600
-      );
-
-      this.logger.log(`Recuperati ${feedItems.length} trending posts`);
-      return result;
-    } catch (error) {
-      this.logger.error(`Errore recuperando trending posts:`, error);
-      return {
-        items: [],
-        timeframe,
-        totalItems: 0,
-      };
-    }
-  }
-
-  // Post più recenti (da tutti gli utenti)
-  async getRecent(
-    limit: number = 20,
-    offset: number = 0
-  ): Promise<{ items: FeedItem[]; total: number }> {
-    try {
-      this.logger.log(
-        `Recupero post recenti (limit: ${limit}, offset: ${offset})`
-      );
-
-      // Recupera post recenti dal post service
-      const recentPostsData = await this.externalApiService.getRecentPosts(
-        limit,
-        offset
-      );
-
-      // Trasforma in FeedItem con dettagli utente
-      const feedItems: FeedItem[] = [];
-
-      for (const post of recentPostsData) {
-        const userDetails = await this.externalApiService.getUserDetails(
-          post.userId || post.authorId
-        );
-
-        if (userDetails) {
-          feedItems.push({
-            postId: post.id || post._id,
-            userId: userDetails.id,
-            username: userDetails.username,
-            content: post.content,
-            createdAt: new Date(post.createdAt),
-            updatedAt: post.updatedAt ? new Date(post.updatedAt) : undefined,
-          });
-        }
-      }
-
-      // Ordina per data più recente
-      feedItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-      this.logger.log(`Recuperati ${feedItems.length} post recenti`);
-
-      return {
-        items: feedItems,
-        total: feedItems.length, // TODO: implementare conteggio reale
-      };
-    } catch (error) {
-      this.logger.error(`Errore recuperando post recenti:`, error);
-      // Ritorna array vuoto invece di throw per non bloccare l'app
-      return {
-        items: [],
-        total: 0,
-      };
     }
   }
 
@@ -287,8 +389,6 @@ export class FeedService {
       // Non fare throw per non bloccare operazioni upstream
     }
   }
-
-  // METODI ORIGINALI (mantenuti per compatibilità)
 
   // Metodo chiamato quando un utente posta (invalida i feed dei suoi followers)
   async handleNewPost(authorId: string): Promise<void> {

@@ -1,3 +1,7 @@
+Premessa:
+
+> Per scopi didattici tutte le `origin` sono state impostate a `*` oppure a `true`
+
 Per user-service, necessario:
 
 ```bash
@@ -20,6 +24,22 @@ docker compose up --build
 # oppure versione detached se non si vogliono logs
 docker compose up --build -d
 ```
+
+---
+
+Nel caso si voglia far partire in locale con dei DB locali che vanno configurati:
+
+```bash
+npm run dev
+```
+
+che in background sta facendo girare questo:
+
+```bash
+nx run-many --target=serve --projects=frontend,api-gateway,user-service,post-service,feed-service,social-graph-service --parallel --exclude=*-e2e
+```
+
+---
 
 # SocialNetworkDbProject
 
