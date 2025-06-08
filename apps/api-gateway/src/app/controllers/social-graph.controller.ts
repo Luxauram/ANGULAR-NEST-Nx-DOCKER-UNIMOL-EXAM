@@ -8,10 +8,13 @@ import {
   UseGuards,
   Request,
   Query,
+  ValidationPipe,
 } from '@nestjs/common';
 import { MicroserviceService } from '../services/microservice.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { FollowUserDto } from '../dto/social-graph/follower-user.dto';
+import { FollowUserDto } from '../dto/social-graph/follow-user.dto';
+import { SyncUserDto } from '../dto/social-graph/sync-user.dto';
+import { PaginationQueryDto } from '../dto/social-graph/pagination-query.dto';
 
 @Controller('social')
 export class SocialGraphController {
@@ -22,15 +25,13 @@ export class SocialGraphController {
    * Sincronizza utente nel social graph (interno, chiamato quando si crea/aggiorna un utente)
    */
   @Post('sync-user')
-  async syncUser(
-    @Body() body: { userId: string; username: string; email: string }
-  ) {
-    console.log('🔄 Syncing user in social graph:', body);
+  async syncUser(@Body(ValidationPipe) syncUserDto: SyncUserDto) {
+    console.log('🔄 Syncing user in social graph:', syncUserDto);
 
     return await this.microserviceService.post(
       'socialGraph',
       '/sync-user',
-      body
+      syncUserDto
     );
   }
 
@@ -40,7 +41,10 @@ export class SocialGraphController {
    */
   @UseGuards(JwtAuthGuard)
   @Post('follow')
-  async followUser(@Request() req, @Body() followUserDto: FollowUserDto) {
+  async followUser(
+    @Request() req,
+    @Body(ValidationPipe) followUserDto: FollowUserDto
+  ) {
     const userId = req.user.userId;
     console.log(
       '👥 User',
@@ -49,10 +53,16 @@ export class SocialGraphController {
       followUserDto.targetUserId
     );
 
-    return await this.microserviceService.post('socialGraph', '/follow', {
+    const servicePayload = {
       followerId: userId,
       followingId: followUserDto.targetUserId,
-    });
+    };
+
+    return await this.microserviceService.post(
+      'socialGraph',
+      '/follow',
+      servicePayload
+    );
   }
 
   /**
@@ -74,10 +84,6 @@ export class SocialGraphController {
     );
   }
 
-  // ========================================================================
-  // ROTTE SPECIFICHE "ME" - DEVONO ESSERE PRIMA DELLE ROTTE PARAMETRICHE!
-  // ========================================================================
-
   /**
    * GET /api/social/followers/me
    * Ottieni i propri follower (protetto)
@@ -86,17 +92,19 @@ export class SocialGraphController {
   @Get('followers/me')
   async getMyFollowers(
     @Request() req,
-    @Query('limit') limit?: string,
-    @Query('offset') offset?: string
+    @Query(ValidationPipe) queryDto: PaginationQueryDto
   ) {
     const userId = req.user.userId;
-    console.log('👥 Getting my followers:', userId);
-
-    const queryParams: any = {};
-    if (limit) queryParams.limit = limit;
-    if (offset) queryParams.offset = offset;
+    console.log('👥 Getting my followers:', userId, 'with params:', queryDto);
 
     try {
+      // Costruisci query params solo se forniti
+      const queryParams: any = {};
+      if (queryDto.limit !== undefined)
+        queryParams.limit = queryDto.limit.toString();
+      if (queryDto.offset !== undefined)
+        queryParams.offset = queryDto.offset.toString();
+
       return await this.microserviceService.get(
         'socialGraph',
         `/followers/${userId}`,
@@ -116,17 +124,18 @@ export class SocialGraphController {
   @Get('following/me')
   async getMyFollowing(
     @Request() req,
-    @Query('limit') limit?: string,
-    @Query('offset') offset?: string
+    @Query(ValidationPipe) queryDto: PaginationQueryDto
   ) {
     const userId = req.user.userId;
-    console.log('👥 Getting my following:', userId);
-
-    const queryParams: any = {};
-    if (limit) queryParams.limit = limit;
-    if (offset) queryParams.offset = offset;
+    console.log('👥 Getting my following:', userId, 'with params:', queryDto);
 
     try {
+      const queryParams: any = {};
+      if (queryDto.limit !== undefined)
+        queryParams.limit = queryDto.limit.toString();
+      if (queryDto.offset !== undefined)
+        queryParams.offset = queryDto.offset.toString();
+
       return await this.microserviceService.get(
         'socialGraph',
         `/following/${userId}`,
@@ -138,10 +147,6 @@ export class SocialGraphController {
     }
   }
 
-  // ========================================================================
-  // ROTTE PARAMETRICHE - DEVONO ESSERE DOPO LE ROTTE SPECIFICHE!
-  // ========================================================================
-
   /**
    * GET /api/social/followers/:userId
    * Ottieni i follower di un utente
@@ -149,16 +154,22 @@ export class SocialGraphController {
   @Get('followers/:userId')
   async getFollowers(
     @Param('userId') userId: string,
-    @Query('limit') limit?: string,
-    @Query('offset') offset?: string
+    @Query(ValidationPipe) queryDto: PaginationQueryDto
   ) {
-    console.log('👥 Getting followers for user:', userId);
-
-    const queryParams: any = {};
-    if (limit) queryParams.limit = limit;
-    if (offset) queryParams.offset = offset;
+    console.log(
+      '👥 Getting followers for user:',
+      userId,
+      'with params:',
+      queryDto
+    );
 
     try {
+      const queryParams: any = {};
+      if (queryDto.limit !== undefined)
+        queryParams.limit = queryDto.limit.toString();
+      if (queryDto.offset !== undefined)
+        queryParams.offset = queryDto.offset.toString();
+
       return await this.microserviceService.get(
         'socialGraph',
         `/followers/${userId}`,
@@ -177,16 +188,22 @@ export class SocialGraphController {
   @Get('following/:userId')
   async getFollowing(
     @Param('userId') userId: string,
-    @Query('limit') limit?: string,
-    @Query('offset') offset?: string
+    @Query(ValidationPipe) queryDto: PaginationQueryDto
   ) {
-    console.log('👥 Getting following for user:', userId);
-
-    const queryParams: any = {};
-    if (limit) queryParams.limit = limit;
-    if (offset) queryParams.offset = offset;
+    console.log(
+      '👥 Getting following for user:',
+      userId,
+      'with params:',
+      queryDto
+    );
 
     try {
+      const queryParams: any = {};
+      if (queryDto.limit !== undefined)
+        queryParams.limit = queryDto.limit.toString();
+      if (queryDto.offset !== undefined)
+        queryParams.offset = queryDto.offset.toString();
+
       return await this.microserviceService.get(
         'socialGraph',
         `/following/${userId}`,
@@ -252,18 +269,24 @@ export class SocialGraphController {
   }
 
   /**
+   * @TODO da implementare
    * GET /api/social/suggestions
    * Ottieni suggerimenti di utenti da seguire (protetto)
-   * NOTA: Questa funzionalità non è ancora implementata nel social-graph-service
    */
   @UseGuards(JwtAuthGuard)
   @Get('suggestions')
-  async getFollowSuggestions(@Request() req, @Query('limit') limit?: string) {
+  async getFollowSuggestions(
+    @Request() req,
+    @Query(ValidationPipe) queryDto: PaginationQueryDto
+  ) {
     const userId = req.user.userId;
-    console.log('💡 Getting follow suggestions for user:', userId);
+    console.log(
+      '💡 Getting follow suggestions for user:',
+      userId,
+      'with params:',
+      queryDto
+    );
 
-    // Questa funzionalità dovrebbe essere implementata nel social-graph-service
-    // Per ora restituiamo un messaggio di "non implementato"
     return {
       message: 'Follow suggestions not yet implemented',
       suggestions: [],

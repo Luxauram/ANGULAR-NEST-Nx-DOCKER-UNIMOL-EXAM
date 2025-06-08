@@ -11,11 +11,14 @@ import {
   Request,
   ValidationPipe,
   Query,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { MicroserviceService } from '../services/microservice.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto } from '../dto/user/update-user.dto';
+import { ChangePasswordDto } from '../dto/user/change-password.dto';
 
 @Controller('users')
 export class UserController {
@@ -26,6 +29,7 @@ export class UserController {
    * Crea nuovo utente (pubblico - per registrazione)
    */
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   async createUser(@Body(ValidationPipe) createUserDto: CreateUserDto) {
     console.log('👤 Creating user:', createUserDto.username);
     console.log('📝 User data:', JSON.stringify(createUserDto, null, 2));
@@ -59,13 +63,28 @@ export class UserController {
   }
 
   /**
+   * GET /api/users/search?q=query
+   * Cerca utenti usando query parameter (protetto)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('search')
+  async searchUsers(@Query('q') query: string) {
+    console.log('🔍 Searching users with query param:', query);
+
+    return await this.microserviceService.get(
+      'user',
+      `/users/search?q=${query}`
+    );
+  }
+
+  /**
    * GET /api/users/search/:query
-   * Cerca utenti per username o nome
+   * Cerca utenti per username o nome (protetto)
    */
   @UseGuards(JwtAuthGuard)
   @Get('search/:query')
-  async searchUsers(@Param('query') query: string) {
-    console.log('🔍 Searching users:', query);
+  async searchUsersByPath(@Param('query') query: string) {
+    console.log('🔍 Searching users with path param:', query);
 
     return await this.microserviceService.get('user', `/users/search/${query}`);
   }
@@ -81,6 +100,41 @@ export class UserController {
     return await this.microserviceService.get(
       'user',
       `/users/username/${username}`
+    );
+  }
+
+  /**
+   * POST /api/users/auth/validate
+   * Valida credenziali utente (per autenticazione interna)
+   */
+  @Post('auth/validate')
+  async validateUser(@Body() validateDto: { email: string; password: string }) {
+    console.log('🔍 Validating credentials for:', validateDto.email);
+
+    return await this.microserviceService.post(
+      'user',
+      '/users/auth/validate',
+      validateDto
+    );
+  }
+
+  /**
+   * POST /api/users/profile/change-password
+   * Cambia password utente corrente (protetto)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('profile/change-password')
+  async changePassword(
+    @Request() req,
+    @Body(ValidationPipe) changePasswordDto: ChangePasswordDto
+  ) {
+    const userId = req.user.userId;
+    console.log('🔐 Changing password for user:', userId);
+
+    return await this.microserviceService.post(
+      'user',
+      `/users/${userId}/change-password`,
+      changePasswordDto
     );
   }
 
@@ -136,6 +190,22 @@ export class UserController {
   }
 
   /**
+   * DELETE /api/users/profile/hard
+   * Elimina definitivamente account utente corrente (protetto)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Delete('profile/hard')
+  async hardDeleteCurrentUser(@Request() req) {
+    const userId = req.user.userId;
+    console.log('💀 Hard deleting user:', userId);
+
+    return await this.microserviceService.delete(
+      'user',
+      `/users/${userId}/hard`
+    );
+  }
+
+  /**
    * GET /api/users/:id
    * Ottieni profilo utente pubblico per ID
    * IMPORTANTE: Questa rotta deve essere DOPO tutte le rotte specifiche
@@ -157,5 +227,50 @@ export class UserController {
       console.error('❌ Error getting user profile:', error);
       throw error;
     }
+  }
+
+  /**
+   * PUT /api/users/:id
+   * Aggiorna utente specifico (solo per admin - @TODO da proteggere)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  async updateUser(
+    @Param('id') id: string,
+    @Body(ValidationPipe) updateUserDto: UpdateUserDto
+  ) {
+    console.log('👤 Admin updating user:', id);
+    // @TODO: Aggiungere controllo ruolo admin
+
+    return await this.microserviceService.put(
+      'user',
+      `/users/${id}`,
+      updateUserDto
+    );
+  }
+
+  /**
+   * DELETE /api/users/:id
+   * Elimina utente specifico (solo per admin - @TODO da proteggere)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async deleteUser(@Param('id') id: string) {
+    console.log('👤 Admin deleting user:', id);
+    // TODO: Aggiungere controllo ruolo admin
+
+    return await this.microserviceService.delete('user', `/users/${id}`);
+  }
+  /**
+   * DELETE /api/users/:id/hard
+   * Elimina definitivamente utente specifico (solo per admin - @TODO da proteggere)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id/hard')
+  async hardDeleteUser(@Param('id') id: string) {
+    console.log('💀 Admin hard deleting user:', id);
+    // TODO: Aggiungere controllo ruolo admin
+
+    return await this.microserviceService.delete('user', `/users/${id}/hard`);
   }
 }

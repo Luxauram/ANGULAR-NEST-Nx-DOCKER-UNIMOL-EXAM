@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-inferrable-types */
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -25,7 +26,6 @@ export class PostRepository {
     const { userId, page = 1, limit = 10, tag } = query;
     const skip = (page - 1) * limit;
 
-    // Costruisci il filtro
     const filter: any = { isPublic: true };
 
     if (userId) {
@@ -36,11 +36,10 @@ export class PostRepository {
       filter.tags = { $in: [tag] };
     }
 
-    // Esegui query con paginazione
     const [posts, total] = await Promise.all([
       this.postModel
         .find(filter)
-        .sort({ createdAt: -1 }) // Ordina per data decrescente
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .exec(),
@@ -48,6 +47,15 @@ export class PostRepository {
     ]);
 
     return { posts, total };
+  }
+
+  async findRecent(limit: number = 10, offset: number = 0): Promise<Post[]> {
+    return this.postModel
+      .find()
+      .sort({ createdAt: -1 })
+      .skip(offset)
+      .limit(limit)
+      .exec();
   }
 
   async findByUserId(userId: string): Promise<Post[]> {

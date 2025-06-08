@@ -1,6 +1,24 @@
 <div class="min-h-screen bg-gray-50">
   <!-- Main Content -->
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Debug Info (remove in production) -->
+    <div
+      class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
+      *ngIf="debugInfo"
+    >
+      <h3 class="text-sm font-medium text-yellow-800 mb-2">Debug Info:</h3>
+      <p class="text-sm text-yellow-700">
+        Following: {{ followingCount }} users
+      </p>
+      <p class="text-sm text-yellow-700">Feed posts: {{ feedPosts.length }}</p>
+      <button
+        (click)="testDifferentFeeds()"
+        class="mt-2 px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs hover:bg-yellow-300"
+      >
+        Test All Feed Types
+      </button>
+    </div>
+
     <!-- Post Creation Form -->
     <div class="mb-8">
       <div class="card">
@@ -12,7 +30,12 @@
     <div class="space-y-6">
       <!-- Feed Header -->
       <div class="flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-gray-900">Your Feed</h2>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Your Feed</h2>
+          <p class="text-sm text-gray-500" *ngIf="followingCount > 0">
+            Following {{ followingCount }} users
+          </p>
+        </div>
         <button
           (click)="refreshFeed()"
           [disabled]="isLoading"
@@ -79,12 +102,38 @@
             ></path>
           </svg>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No posts yet</h3>
-        <p class="text-gray-500 mb-4">
-          Be the first to share something or follow other users to see their
-          posts!
-        </p>
-        <button class="btn-primary">Find Users to Follow</button>
+
+        <!-- Messaggio condizionale basato sui follow -->
+        <div *ngIf="followingCount === 0; else hasFollowsTemplate">
+          <h3 class="text-lg font-medium text-gray-900 mb-2">
+            Your feed is empty
+          </h3>
+          <p class="text-gray-500 mb-4">
+            Start following other users to see their posts in your personalized
+            feed!
+          </p>
+          <button class="btn-primary" routerLink="/social/discover">
+            Find Users to Follow
+          </button>
+        </div>
+
+        <ng-template #hasFollowsTemplate>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">
+            No recent posts
+          </h3>
+          <p class="text-gray-500 mb-4">
+            The users you follow haven't posted recently. Check back later or
+            discover more users!
+          </p>
+          <div class="space-x-4">
+            <button class="btn-primary" (click)="refreshFeed()">
+              Refresh Feed
+            </button>
+            <button class="btn-secondary" routerLink="/social/discover">
+              Discover More Users
+            </button>
+          </div>
+        </ng-template>
       </div>
     </div>
   </div>

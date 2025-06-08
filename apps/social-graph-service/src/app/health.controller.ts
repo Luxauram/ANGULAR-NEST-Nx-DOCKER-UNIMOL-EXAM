@@ -9,10 +9,20 @@ export class HealthController {
   async check() {
     try {
       await this.neo4jService.runQuery(`RETURN 1 AS result`);
-      return { status: 'ok', db: 'neo4j' };
+      return {
+        status: 'ok',
+        service: 'social-graph-service',
+        db: 'neo4j',
+        timestamp: new Date().toISOString(),
+      };
     } catch (error) {
       console.error('Health check failed:', error);
-      return { status: 'error', db: 'neo4j' };
+      return {
+        status: 'error',
+        service: 'social-graph-service',
+        db: 'neo4j',
+        timestamp: new Date().toISOString(),
+      };
     }
   }
 }

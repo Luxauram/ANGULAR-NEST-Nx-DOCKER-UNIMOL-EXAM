@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-inferrable-types */
 import neo4j from 'neo4j-driver';
 import { Injectable } from '@nestjs/common';
 import { Neo4jService } from '../services/neo4j.service';
@@ -191,7 +192,11 @@ export class Neo4jRepository {
   }
 
   // Ottieni i followers di un utente
-  async getFollowers(userId: string, limit = 50): Promise<UserNode[]> {
+  async getFollowers(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<UserNode[]> {
     console.log('👥 [Neo4jRepository] Getting followers for user:', {
       userId,
       limit,
@@ -199,12 +204,15 @@ export class Neo4jRepository {
     });
 
     const neo4jLimit = neo4j.int(limit);
+    const neo4jOffset = neo4j.int(offset);
 
     console.log('🔧 [DEBUG] Neo4j limit:', neo4jLimit, typeof neo4jLimit);
 
     const query = `
     MATCH (follower:User)-[:FOLLOWS]->(user:User {id: $userId})
     RETURN follower
+    ORDER BY follower.username
+    SKIP $offset
     LIMIT $limit
   `;
 
@@ -212,9 +220,10 @@ export class Neo4jRepository {
       const result = await this.neo4jService.runQuery(query, {
         userId,
         limit: neo4jLimit,
+        offset: neo4jOffset,
       });
 
-      const followers = result.records.map((record) => {
+      return result.records.map((record) => {
         const follower = record.get('follower').properties;
         return {
           id: follower.id,
@@ -222,9 +231,6 @@ export class Neo4jRepository {
           email: follower.email,
         };
       });
-
-      console.log('👥 [Neo4jRepository] Followers found:', followers.length);
-      return followers;
     } catch (error) {
       console.error('❌ [Neo4jRepository] Get followers failed:', error);
       throw error;
@@ -232,7 +238,11 @@ export class Neo4jRepository {
   }
 
   // Ottieni i following di un utente
-  async getFollowing(userId: string, limit = 50): Promise<UserNode[]> {
+  async getFollowing(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<UserNode[]> {
     console.log('👥 [Neo4jRepository] Getting following for user:', {
       userId,
       limit,
@@ -240,10 +250,13 @@ export class Neo4jRepository {
     });
 
     const neo4jLimit = neo4j.int(limit);
+    const neo4jOffset = neo4j.int(offset);
 
     const query = `
     MATCH (user:User {id: $userId})-[:FOLLOWS]->(following:User)
     RETURN following
+    ORDER BY following.username
+    SKIP $offset
     LIMIT $limit
   `;
 
@@ -251,9 +264,10 @@ export class Neo4jRepository {
       const result = await this.neo4jService.runQuery(query, {
         userId,
         limit: neo4jLimit,
+        offset: neo4jOffset,
       });
 
-      const following = result.records.map((record) => {
+      return result.records.map((record) => {
         const followingUser = record.get('following').properties;
         return {
           id: followingUser.id,
@@ -261,9 +275,6 @@ export class Neo4jRepository {
           email: followingUser.email,
         };
       });
-
-      console.log('👥 [Neo4jRepository] Following found:', following.length);
-      return following;
     } catch (error) {
       console.error('❌ [Neo4jRepository] Get following failed:', error);
       throw error;

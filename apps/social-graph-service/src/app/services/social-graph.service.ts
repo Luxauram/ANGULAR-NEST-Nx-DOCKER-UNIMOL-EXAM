@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-inferrable-types */
 import {
   Injectable,
   BadRequestException,
@@ -89,22 +90,19 @@ export class SocialGraphService {
         followingExists,
       });
 
+      // AUTO-SYNC: Se gli utenti non esistono, recuperali dal user-service
       if (!followerExists) {
         console.log(
-          '❌ [SocialGraphService] Follower does not exist, creating...'
+          '🔄 [SocialGraphService] Auto-syncing follower from user-service...'
         );
-        throw new BadRequestException(
-          `Follower user ${followerId} does not exist in social graph`
-        );
+        await this.autoSyncUserFromUserService(followerId);
       }
 
       if (!followingExists) {
         console.log(
-          '❌ [SocialGraphService] Following user does not exist, creating...'
+          '🔄 [SocialGraphService] Auto-syncing following user from user-service...'
         );
-        throw new BadRequestException(
-          `Following user ${followingId} does not exist in social graph`
-        );
+        await this.autoSyncUserFromUserService(followingId);
       }
 
       const success = await this.neo4jRepository.followUser(
@@ -128,6 +126,44 @@ export class SocialGraphService {
     } catch (error) {
       console.error('❌ [SocialGraphService] Follow failed:', error);
       throw new BadRequestException(error.message || 'Failed to follow user');
+    }
+  }
+
+  private async autoSyncUserFromUserService(userId: string): Promise<void> {
+    try {
+      console.log(
+        `🔄 [SocialGraphService] Auto-syncing user ${userId} from user-service`
+      );
+
+      // Chiamata all'API Gateway per ottenere i dati utente
+      const userResponse = await fetch(
+        `http://api-gateway:3000/users/${userId}`
+      );
+
+      if (!userResponse.ok) {
+        throw new Error(`User ${userId} not found in user-service`);
+      }
+
+      const userData = await userResponse.json();
+
+      // Sincronizza l'utente nel grafo sociale
+      await this.syncUserFromUserService(
+        userData.id,
+        userData.username,
+        userData.email
+      );
+
+      console.log(
+        `✅ [SocialGraphService] User ${userId} auto-synced successfully`
+      );
+    } catch (error) {
+      console.error(
+        `❌ [SocialGraphService] Auto-sync failed for user ${userId}:`,
+        error
+      );
+      throw new BadRequestException(
+        `User ${userId} not found and auto-sync failed`
+      );
     }
   }
 
@@ -172,9 +208,11 @@ export class SocialGraphService {
   }
 
   // Ottieni followers
-  async getFollowers(getFollowersDto: GetFollowersDto): Promise<UserNode[]> {
-    const { userId, limit } = getFollowersDto;
-    const limitNumber = limit ? parseInt(limit) : 50;
+  async getFollowers(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<UserNode[]> {
     console.log('🚀 [SocialGraphService] Get followers request:', {
       userId,
       limit,
@@ -183,7 +221,8 @@ export class SocialGraphService {
     try {
       const followers = await this.neo4jRepository.getFollowers(
         userId,
-        limitNumber
+        limit,
+        offset
       );
       console.log(
         '✅ [SocialGraphService] Followers retrieved:',
@@ -197,14 +236,22 @@ export class SocialGraphService {
   }
 
   // Ottieni following
-  async getFollowing(userId: string, limit = 50): Promise<UserNode[]> {
+  async getFollowing(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<UserNode[]> {
     console.log('🚀 [SocialGraphService] Get following request:', {
       userId,
       limit,
     });
 
     try {
-      const following = await this.neo4jRepository.getFollowing(userId, limit);
+      const following = await this.neo4jRepository.getFollowing(
+        userId,
+        limit,
+        offset
+      );
       console.log(
         '✅ [SocialGraphService] Following retrieved:',
         following.length

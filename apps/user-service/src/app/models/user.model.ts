@@ -1,5 +1,19 @@
 import { User as PrismaUser } from '@prisma/client';
 
+// Se l'import sopra non funziona
+// type PrismaUser = {
+//   id: string;
+//   username: string;
+//   email: string;
+//   passwordHash: string;
+//   firstName: string;
+//   lastName: string;
+//   bio: string | null;
+//   isActive: boolean;
+//   createdAt: Date;
+//   updatedAt: Date;
+// };
+
 export type User = PrismaUser;
 
 export interface CreateUserData {
@@ -27,7 +41,7 @@ export interface UserResponse {
   email: string;
   firstName: string;
   lastName: string;
-  bio?: string;
+  bio?: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -46,6 +60,14 @@ export function toUserResponse(user: User): UserResponse {
     isActive: user.isActive,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-    fullName: `${user.firstName} ${user.lastName}`,
+    fullName: `${user.firstName} ${user.lastName}`.trim(),
   };
+}
+
+export function getDisplayName(user: User): string {
+  return `${user.firstName} ${user.lastName}`.trim();
+}
+
+export function isValidUser(user: User): boolean {
+  return user.isActive && !!user.username && !!user.email;
 }

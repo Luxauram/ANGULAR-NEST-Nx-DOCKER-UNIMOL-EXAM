@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-inferrable-types */
 import {
   Injectable,
   NotFoundException,
@@ -36,6 +37,23 @@ export class PostService {
     };
   }
 
+  async getRecentPosts(
+    limit: number = 10,
+    offset: number = 0
+  ): Promise<Post[]> {
+    try {
+      console.log(
+        `📰 Getting recent posts - limit: ${limit}, offset: ${offset}`
+      );
+      const posts = await this.postRepository.findRecent(limit, offset);
+      console.log(`✅ Found ${posts.length} recent posts`);
+      return posts;
+    } catch (error) {
+      console.error('❌ Error getting recent posts:', error);
+      throw new Error('Failed to get recent posts');
+    }
+  }
+
   async getPostsByUser(userId: string): Promise<Post[]> {
     return this.postRepository.findByUserId(userId);
   }
@@ -46,11 +64,9 @@ export class PostService {
     requestingUserId: string
   ): Promise<Post> {
     const existingPost = await this.getPostById(id);
-
     if (existingPost.userId !== requestingUserId) {
       throw new ForbiddenException('You can only update your own posts');
     }
-
     const updatedPost = await this.postRepository.update(id, updatePostDto);
     if (!updatedPost) {
       throw new NotFoundException(`Post with ID ${id} not found`);
@@ -60,18 +76,18 @@ export class PostService {
 
   async deletePost(id: string, requestingUserId: string): Promise<void> {
     const existingPost = await this.getPostById(id);
-
     if (existingPost.userId !== requestingUserId) {
       throw new ForbiddenException('You can only delete your own posts');
     }
-
     const deleted = await this.postRepository.delete(id);
     if (!deleted) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
   }
 
-  async likePost(id: string): Promise<Post> {
+  async likePost(id: string, userId: string): Promise<Post> {
+    await this.getPostById(id);
+
     const post = await this.postRepository.incrementLikes(id);
     if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);
@@ -79,7 +95,9 @@ export class PostService {
     return post;
   }
 
-  async unlikePost(id: string): Promise<Post> {
+  async unlikePost(id: string, userId: string): Promise<Post> {
+    await this.getPostById(id);
+
     const post = await this.postRepository.decrementLikes(id);
     if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);
@@ -87,7 +105,9 @@ export class PostService {
     return post;
   }
 
-  async incrementCommentCount(id: string): Promise<Post> {
+  async incrementCommentCount(id: string, userId: string): Promise<Post> {
+    await this.getPostById(id);
+
     const post = await this.postRepository.incrementComments(id);
     if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);

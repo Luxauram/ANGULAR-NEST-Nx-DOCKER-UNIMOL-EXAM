@@ -26,7 +26,7 @@ export class ExternalApiService {
   // Recupera gli utenti seguiti da un utente
   async getFollowing(userId: string): Promise<string[]> {
     try {
-      const url = `${this.SOCIAL_GRAPH_SERVICE_URL}/social-graph/following/${userId}`;
+      const url = `${this.SOCIAL_GRAPH_SERVICE_URL}/api/social/following/${userId}`;
       this.logger.log(`Chiamata API: ${url}`);
 
       const response = await firstValueFrom(
@@ -39,6 +39,15 @@ export class ExternalApiService {
         response.data?.following ||
         response.data ||
         [];
+
+      // 🔍 DEBUG LOG per controllare il tipo di ogni elemento
+      console.log('🔍 Following raw response:', following);
+      following.forEach((id, index) => {
+        console.log(`🔍 following[${index}]:`, typeof id, id);
+        if (Array.isArray(id)) {
+          console.error(`❌ ERRORE: following[${index}] è un array!`, id);
+        }
+      });
 
       this.logger.log(`Utente ${userId} segue ${following.length} persone`);
       return following;
@@ -57,6 +66,16 @@ export class ExternalApiService {
     userId: string
   ): Promise<{ id: string; username: string; email?: string } | null> {
     try {
+      // 🔍 DEBUG LOG
+      console.log('🔍 getUserDetails chiamato con:', typeof userId, userId);
+      if (Array.isArray(userId)) {
+        console.error(
+          '❌ ERRORE: getUserDetails ricevuto array invece di stringa!',
+          userId
+        );
+        return null;
+      }
+
       const url = `${this.USER_SERVICE_URL}/users/${userId}`;
       this.logger.log(`Chiamata API: ${url}`);
 
@@ -83,7 +102,18 @@ export class ExternalApiService {
   // Recupera i post di un utente
   async getUserPosts(userId: string, limit: number = 50): Promise<any[]> {
     try {
+      // 🔍 DEBUG LOG
+      console.log('🔍 getUserPosts chiamato con:', typeof userId, userId);
+      if (Array.isArray(userId)) {
+        console.error(
+          '❌ ERRORE: getUserPosts ricevuto array invece di stringa!',
+          userId
+        );
+        return [];
+      }
+
       const url = `${this.POST_SERVICE_URL}/posts/user/${userId}?limit=${limit}`;
+
       this.logger.log(`Chiamata API: ${url}`);
 
       const response = await firstValueFrom(
@@ -93,7 +123,12 @@ export class ExternalApiService {
       const posts = response.data?.data || response.data || [];
       this.logger.log(`Recuperati ${posts.length} post per utente ${userId}`);
 
-      return posts;
+      const validPosts = posts.filter((post) => {
+        const userId = post.userId || post.authorId;
+        return userId && userId.length === 36 && userId.includes('-');
+      });
+
+      return validPosts;
     } catch (error) {
       this.logger.error(
         `Errore recuperando post per utente ${userId}:`,
@@ -150,7 +185,12 @@ export class ExternalApiService {
       const posts = response.data?.data || response.data || [];
       this.logger.log(`Recuperati ${posts.length} post recenti`);
 
-      return posts;
+      const validPosts = posts.filter((post) => {
+        const userId = post.userId || post.authorId;
+        return userId && userId.length === 36 && userId.includes('-');
+      });
+
+      return validPosts;
     } catch (error) {
       this.logger.error(
         `Errore recuperando post recenti:`,
@@ -176,9 +216,14 @@ export class ExternalApiService {
         );
         const posts = response.data?.data || response.data || [];
         this.logger.log(`Recuperati ${posts.length} post trending`);
-        return posts;
+
+        const validPosts = posts.filter((post) => {
+          const userId = post.userId || post.authorId;
+          return userId && userId.length === 36 && userId.includes('-');
+        });
+
+        return validPosts;
       } catch (trendingError) {
-        // Se l'endpoint trending non esiste, usa i post recenti come fallback
         this.logger.warn(
           'Endpoint trending non disponibile, usando post recenti come fallback'
         );
@@ -196,10 +241,26 @@ export class ExternalApiService {
   // Genera il feed aggregando i post degli utenti seguiti
   async generateFeedItems(userId: string): Promise<FeedItem[]> {
     try {
-      this.logger.log(`Inizio generazione feed per utente ${userId}`);
+      // 🔍 DEBUG LOG
+      console.log('🔍 generateFeedItems chiamato con:', typeof userId, userId);
+      if (Array.isArray(userId)) {
+        console.error(
+          '❌ ERRORE: generateFeedItems ricevuto array invece di stringa!',
+          userId
+        );
+        throw new Error('userId non può essere un array');
+      }
 
-      // 1. Recupera gli utenti seguiti
       const followingIds = await this.getFollowing(userId);
+
+      // 🔍 DEBUG LOG per ogni ID nell'array following
+      console.log('🔍 followingIds recuperati:', followingIds);
+      followingIds.forEach((id, index) => {
+        console.log(`🔍 followingIds[${index}]:`, typeof id, id);
+        if (Array.isArray(id)) {
+          console.error(`❌ ERRORE: followingIds[${index}] è un array!`, id);
+        }
+      });
 
       if (followingIds.length === 0) {
         this.logger.log(`Utente ${userId} non segue nessuno`);
@@ -217,8 +278,23 @@ export class ExternalApiService {
         const batch = followingIds.slice(i, i + batchSize);
 
         const batchPromises = batch.map(async (followedUserId) => {
+          // 🔍 DEBUG LOG
+          console.log(
+            '🔍 Processando followedUserId:',
+            typeof followedUserId,
+            followedUserId
+          );
+          if (Array.isArray(followedUserId)) {
+            console.error(
+              '❌ ERRORE: followedUserId è un array nel batch!',
+              followedUserId
+            );
+            return [];
+          }
+
+          // Recupera i post dell'utente seguito
           const [posts, userDetails] = await Promise.all([
-            this.getUserPosts(followedUserId, 20), // Limita per performance
+            this.getUserPosts(followedUserId, 20),
             this.getUserDetails(followedUserId),
           ]);
 
@@ -266,7 +342,7 @@ export class ExternalApiService {
   // Recupera i followers di un utente (per invalidare i feed quando posta)
   async getFollowers(userId: string): Promise<string[]> {
     try {
-      const url = `${this.SOCIAL_GRAPH_SERVICE_URL}/social-graph/followers/${userId}`;
+      const url = `${this.SOCIAL_GRAPH_SERVICE_URL}/api/social/followers/${userId}`;
       this.logger.log(`Chiamata API: ${url}`);
 
       const response = await firstValueFrom(

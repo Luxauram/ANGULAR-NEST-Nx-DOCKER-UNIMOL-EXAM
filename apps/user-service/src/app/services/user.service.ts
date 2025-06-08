@@ -10,7 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { UserRepository } from '../repositories/user.repository';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { UserResponse, toUserResponse } from '../models/user.model';
+import { User, UserResponse, toUserResponse } from '../models/user.model';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 
@@ -237,18 +237,18 @@ export class UserService {
     return users.map(toUserResponse);
   }
 
-  // Verifica password (utile per autenticazione)
-  async verifyPassword(
-    email: string,
-    password: string
-  ): Promise<UserResponse | null> {
+  /**
+   * Verifica password
+   * Restituisce l'oggetto User completo per permettere la conversione
+   */
+  async verifyPassword(email: string, password: string): Promise<User | null> {
     const user = await this.userRepository.findByEmail(email);
     if (!user || !user.isActive) {
       return null;
     }
 
     const isValid = await bcrypt.compare(password, user.passwordHash);
-    return isValid ? toUserResponse(user) : null;
+    return isValid ? user : null;
   }
 
   // Cambia password
@@ -297,6 +297,7 @@ export class UserService {
 
   /**
    * Valida email e password utente
+   * Restituisce UserResponse (senza password) per uso generale
    */
   async validateUser(
     email: string,

@@ -11,13 +11,15 @@ export class HealthController {
       await this.prisma.$queryRaw`SELECT 1`;
       return {
         status: 'ok',
-        database: 'connected',
+        service: 'user-service',
+        db: 'postgres',
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
         status: 'error',
-        database: 'disconnected',
+        service: 'user-service',
+        db: 'postgres',
         error: error.message,
         timestamp: new Date().toISOString(),
       };

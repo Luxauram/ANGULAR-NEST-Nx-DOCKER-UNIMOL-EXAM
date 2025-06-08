@@ -10,9 +10,19 @@ export class HealthController {
   async check() {
     try {
       const pong = await this.redis.ping();
-      return { status: pong === 'PONG' ? 'ok' : 'error', db: 'redis' };
+      return {
+        status: pong === 'PONG' ? 'ok' : 'error',
+        service: 'feed-service',
+        db: 'redis',
+        timestamp: new Date().toISOString(),
+      };
     } catch {
-      return { status: 'error', db: 'redis' };
+      return {
+        status: 'error',
+        service: 'feed-service',
+        db: 'redis',
+        timestamp: new Date().toISOString(),
+      };
     }
   }
 }

@@ -17,6 +17,7 @@ import { PostService } from '../services/post.service';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { GetPostsQueryDto } from '../dto/get-posts-query.dto';
+import { GetRecentPostsDto } from '../dto/get-recent-post.dto';
 
 @Controller('posts')
 export class PostController {
@@ -55,6 +56,19 @@ export class PostController {
   async findAll(@Query() query: GetPostsQueryDto) {
     console.log('📋 Post Service - Query params:', query);
     return this.postService.getPosts(query);
+  }
+
+  @Get('recent')
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: false,
+    })
+  )
+  async getRecentPosts(@Query() query: GetRecentPostsDto) {
+    console.log('📰 Post Service - Recent posts request:', query);
+    return this.postService.getRecentPosts(query.limit, query.offset);
   }
 
   @Get('user/:userId')
@@ -97,30 +111,22 @@ export class PostController {
   }
 
   @Post(':id/like')
-  async like(@Param('id') id: string) {
-    console.log('❤️ Post Service - Like post:', id);
-    return this.postService.likePost(id);
+  async like(@Param('id') id: string, @Headers('x-user-id') userId: string) {
+    console.log('❤️ Post Service - Like post:', id, 'User ID:', userId);
+    return this.postService.likePost(id, userId);
   }
 
   @Post(':id/unlike')
-  async unlike(@Param('id') id: string) {
-    console.log('💔 Post Service - Unlike post:', id);
-    return this.postService.unlikePost(id);
+  async unlike(@Param('id') id: string, @Headers('x-user-id') userId: string) {
+    console.log('💔 Post Service - Unlike post:', id, 'User ID:', userId);
+    return this.postService.unlikePost(id, userId);
   }
 
   @Post(':id/increment-comments')
-  async incrementComments(@Param('id') id: string) {
-    return this.postService.incrementCommentCount(id);
-  }
-
-  // Health check endpoint
-  @Get('health/check')
-  @HttpCode(HttpStatus.OK)
-  healthCheck() {
-    return {
-      status: 'ok',
-      service: 'post-service',
-      timestamp: new Date().toISOString(),
-    };
+  async incrementComments(
+    @Param('id') id: string,
+    @Headers('x-user-id') userId: string
+  ) {
+    return this.postService.incrementCommentCount(id, userId);
   }
 }

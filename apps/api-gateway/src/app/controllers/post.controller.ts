@@ -3,7 +3,7 @@ import {
   Controller,
   Get,
   Post,
-  Put,
+  Patch,
   Delete,
   Param,
   Query,
@@ -31,7 +31,6 @@ export class PostController {
     console.log('🔍 User from JWT:', req.user);
 
     const userId = req.user.userId;
-
     console.log('📝 Creating post for user:', userId);
 
     let finalContent = createPostDto.content;
@@ -41,14 +40,13 @@ export class PostController {
 
     const postData = {
       content: finalContent,
-      userId: userId, // Cambiato da authorId a userId
+      userId: userId,
       tags: createPostDto.tags || [],
       isPublic:
         createPostDto.isPublic !== undefined ? createPostDto.isPublic : true,
     };
 
     console.log('📤 Sending to Post Service:', postData);
-
     return await this.microserviceService.post('post', '/posts', postData);
   }
 
@@ -62,10 +60,20 @@ export class PostController {
 
     const mappedQuery = {
       ...query,
-      userId: query.userId, // Cambiato da authorId a userId
+      userId: query.userId,
     };
 
     return await this.microserviceService.get('post', '/posts', mappedQuery);
+  }
+
+  /**
+   * GET /api/posts/recent
+   * Ottieni post recenti
+   */
+  @Get('recent')
+  async getRecentPosts(@Query() query: { limit?: number; offset?: number }) {
+    console.log('📰 Getting recent posts:', query);
+    return await this.microserviceService.get('post', '/posts/recent', query);
   }
 
   /**
@@ -83,7 +91,7 @@ export class PostController {
 
     const queryWithUserId = {
       ...query,
-      userId: userId, // Cambiato da authorId a userId
+      userId: userId,
     };
 
     return await this.microserviceService.get(
@@ -94,22 +102,38 @@ export class PostController {
   }
 
   /**
+   * GET /api/posts/user/:userId
+   * Ottieni tutti i post di un utente specifico
+   */
+  @Get('user/:userId')
+  async getUserPosts(
+    @Param('userId') userId: string,
+    @Query() query: { page?: number; limit?: number }
+  ) {
+    console.log('📝 Getting posts for user:', userId);
+    return await this.microserviceService.get(
+      'post',
+      `/posts/user/${userId}`,
+      query
+    );
+  }
+
+  /**
    * GET /api/posts/:id
    * Ottieni singolo post
    */
   @Get(':id')
   async getPostById(@Param('id') id: string) {
     console.log('📄 Getting post:', id);
-
     return await this.microserviceService.get('post', `/posts/${id}`);
   }
 
   /**
-   * PUT /api/posts/:id
-   * Aggiorna post (protetto - solo il proprietario)
+   * PATCH /api/posts/:id
+   * Aggiorna post (protetto)
    */
   @UseGuards(JwtAuthGuard)
-  @Put(':id')
+  @Patch(':id')
   async updatePost(
     @Request() req,
     @Param('id') id: string,
@@ -160,26 +184,14 @@ export class PostController {
   }
 
   /**
-   * GET /api/posts/user/:userId
-   * Ottieni tutti i post di un utente specifico
-   */
-  @UseGuards(JwtAuthGuard)
-  @Get('user/:userId')
-  async getUserPosts(@Param('userId') userId: string) {
-    console.log('📝 Getting posts for user:', userId);
-
-    return await this.microserviceService.get('post', `/posts/user/${userId}`);
-  }
-
-  /**
    * POST /api/posts/:id/like
-   * Like/Unlike post (protetto) - Gestisce toggle automaticamente
+   * Like post (protetto)
    */
   @UseGuards(JwtAuthGuard)
   @Post(':id/like')
-  async toggleLike(@Request() req, @Param('id') postId: string) {
+  async likePost(@Request() req, @Param('id') postId: string) {
     const userId = req.user.userId;
-    console.log('❤️ Toggling like on post:', postId, 'by user:', userId);
+    console.log('❤️ Liking post:', postId, 'by user:', userId);
 
     return await this.microserviceService.post(
       'post',
@@ -211,40 +223,17 @@ export class PostController {
    * POST /api/posts/:id/increment-comments
    * Incrementa il contatore dei commenti
    */
+  @UseGuards(JwtAuthGuard)
   @Post(':id/increment-comments')
-  async incrementComments(@Param('id') id: string) {
-    console.log('💬 Incrementing comments for post:', id);
+  async incrementComments(@Request() req, @Param('id') id: string) {
+    const userId = req.user.userId;
+    console.log('💬 Incrementing comments for post:', id, 'by user:', userId);
 
     return await this.microserviceService.post(
       'post',
       `/posts/${id}/increment-comments`,
-      {}
+      {},
+      { 'x-user-id': userId }
     );
-  }
-
-  /**
-   * GET /api/posts/user/:userId
-   * Ottieni post di un utente specifico
-   */
-  @Get('user/:userId')
-  async getPostsByUser(
-    @Param('userId') userId: string,
-    @Query() query: { page?: number; limit?: number }
-  ) {
-    console.log('📋 Getting posts for user:', userId);
-
-    return await this.microserviceService.get(
-      'post',
-      `/posts/user/${userId}`, // Cambiato da /posts/author/${userId} a /posts/user/${userId}
-      query
-    );
-  }
-
-  /**
-   * Health check endpoint
-   */
-  @Get('health/check')
-  async healthCheck() {
-    return await this.microserviceService.get('post', '/posts/health/check');
   }
 }

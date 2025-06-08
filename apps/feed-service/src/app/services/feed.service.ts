@@ -27,20 +27,25 @@ export class FeedService {
       // 1. Prova a recuperare da cache
       let feed = await this.redisService.getFeed(userId, limit, offset);
 
-      if (feed) {
+      if (feed && feed.items.length > 0) {
         this.logger.log(
           `Feed recuperato da cache per utente ${userId} - ${feed.items.length} items`
         );
         return feed;
       }
 
-      // 2. Se non in cache, genera il feed
+      // 2. Se non in cache o vuoto, genera il feed
       this.logger.log(
         `Feed non in cache per utente ${userId}, generazione in corso...`
       );
-      await this.refreshFeed(userId);
 
-      // 3. Recupera di nuovo da cache
+      const feedItems = await this.externalApiService.generateFeedItems(userId);
+
+      if (feedItems.length > 0) {
+        await this.redisService.saveFeed(userId, feedItems);
+      }
+
+      // 3. Recupera di nuovo da cache con paginazione
       feed = await this.redisService.getFeed(userId, limit, offset);
 
       if (!feed) {
@@ -128,6 +133,15 @@ export class FeedService {
         `Recupero trending posts (${timeframe}, limit: ${limit})`
       );
 
+      // Prova prima con cache
+      const cacheKey = `trending:${timeframe}:${limit}`;
+      const cached = await this.redisService.getGenericCache(cacheKey);
+
+      if (cached) {
+        this.logger.log('Trending posts recuperati da cache');
+        return JSON.parse(cached);
+      }
+
       // Recupera post trending dal post service
       const trendingPostsData = await this.externalApiService.getTrendingPosts(
         limit,
@@ -157,16 +171,23 @@ export class FeedService {
       // Ordina per data più recente
       feedItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-      this.logger.log(`Recuperati ${feedItems.length} trending posts`);
-
-      return {
+      const result = {
         items: feedItems,
         timeframe,
         totalItems: feedItems.length,
       };
+
+      // Salva in cache per 10 minuti
+      await this.redisService.setGenericCache(
+        cacheKey,
+        JSON.stringify(result),
+        600
+      );
+
+      this.logger.log(`Recuperati ${feedItems.length} trending posts`);
+      return result;
     } catch (error) {
       this.logger.error(`Errore recuperando trending posts:`, error);
-      // Ritorna array vuoto invece di throw per non bloccare l'app
       return {
         items: [],
         timeframe,
@@ -338,26 +359,6 @@ export class FeedService {
         totalItems: 0,
         lastUpdated: null,
       };
-    }
-  }
-
-  // METODI HELPER PRIVATI
-
-  // Recupera i post più recenti da tutti gli utenti (placeholder per trending/recent)
-  private async getRecentPostsFromAllUsers(
-    limit: number = 20,
-    offset: number = 0
-  ): Promise<FeedItem[]> {
-    try {
-      // TODO: Implementare chiamata al post service per ottenere post globali
-      // Per ora restituiamo array vuoto come placeholder
-      this.logger.warn(
-        'getRecentPostsFromAllUsers non implementato - restituendo array vuoto'
-      );
-      return [];
-    } catch (error) {
-      this.logger.error('Errore recuperando post recenti globali:', error);
-      return [];
     }
   }
 }

@@ -167,15 +167,6 @@ export class PostService {
   }
 
   /**
-   * GET /posts/health/check - Health check
-   */
-  healthCheck(): Observable<any> {
-    return this.http.get(`${this.API_URL}/posts/health/check`, {
-      headers: this.getHeaders(),
-    });
-  }
-
-  /**
    * Ottiene tutti i post di un utente specifico
    */
   getUserPosts(userId: string): Observable<Post[]> {

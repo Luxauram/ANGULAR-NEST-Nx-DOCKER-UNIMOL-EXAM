@@ -12,6 +12,8 @@ import {
 } from '@nestjs/common';
 import { SocialGraphService } from '../services/social-graph.service';
 import { FollowUserDto } from '../dto/follow-user.dto';
+import { SyncUserDto } from '../dto/sync-user.dto';
+import { CheckFollowDto } from '../dto/check-follow.dto';
 import { GetFollowersDto } from '../dto/get-followers.dto';
 
 @Controller()
@@ -20,16 +22,14 @@ export class SocialGraphController {
 
   // POST /sync-user - Sincronizza utente dal user-service
   @Post('sync-user')
-  async syncUser(
-    @Body() body: { userId: string; username: string; email: string }
-  ) {
-    console.log('🎯 [Controller] POST /sync-user called with:', body);
+  async syncUser(@Body(ValidationPipe) syncUserDto: SyncUserDto) {
+    console.log('🎯 [Controller] POST /sync-user called with:', syncUserDto);
 
     try {
       const result = await this.socialGraphService.syncUserFromUserService(
-        body.userId,
-        body.username,
-        body.email
+        syncUserDto.userId,
+        syncUserDto.username,
+        syncUserDto.email
       );
       console.log('✅ [Controller] User sync successful:', result);
       return result;
@@ -62,19 +62,13 @@ export class SocialGraphController {
 
   // DELETE /follow/:followerId/:followingId - Smetti di seguire
   @Delete('follow/:followerId/:followingId')
-  async unfollowUser(
-    @Param('followerId') followerId: string,
-    @Param('followingId') followingId: string
-  ) {
-    console.log('🎯 [Controller] DELETE /follow called with:', {
-      followerId,
-      followingId,
-    });
+  async unfollowUser(@Param(ValidationPipe) checkFollowDto: CheckFollowDto) {
+    console.log('🎯 [Controller] DELETE /follow called with:', checkFollowDto);
 
     try {
       const result = await this.socialGraphService.unfollowUser(
-        followerId,
-        followingId
+        checkFollowDto.followerId,
+        checkFollowDto.followingId
       );
       console.log('✅ [Controller] Unfollow operation result:', result);
       return result;
@@ -91,33 +85,29 @@ export class SocialGraphController {
   @Get('followers/:userId')
   async getFollowers(
     @Param('userId') userId: string,
-    @Query('limit') limit?: string,
-    @Query('offset') offset?: string
+    @Query(ValidationPipe) query: Partial<GetFollowersDto>
   ) {
     console.log('🎯 [Controller] GET /followers called with:', {
       userId,
-      limit,
-      offset,
-      limitType: typeof limit, // Debug: vedi che tipo è
+      query,
     });
 
     try {
-      // CONVERTI DIRETTAMENTE QUI invece di usare il DTO
-      const limitNumber = limit ? parseInt(limit, 10) : 50;
-      const offsetNumber = offset ? parseInt(offset, 10) : 0;
+      // Usa i valori default se non forniti
+      const limit = query.limit ?? 50;
+      const offset = query.offset ?? 0;
 
-      console.log('🔧 [Controller] Converted parameters:', {
-        limitNumber,
-        offsetNumber,
-        limitType: typeof limitNumber,
-        offsetType: typeof offsetNumber,
-      });
-
-      // Chiama direttamente il service con i numeri convertiti
-      const result = await this.socialGraphService.getFollowers({
+      console.log('🔧 [Controller] Using parameters:', {
         userId,
-        limit: limit || '50',
+        limit,
+        offset,
       });
+
+      const result = await this.socialGraphService.getFollowers(
+        userId,
+        limit,
+        offset
+      );
 
       console.log(
         '✅ [Controller] Get followers result:',
@@ -135,30 +125,27 @@ export class SocialGraphController {
   @Get('following/:userId')
   async getFollowing(
     @Param('userId') userId: string,
-    @Query('limit') limit?: string,
-    @Query('offset') offset?: string
+    @Query(ValidationPipe) query: Partial<GetFollowersDto>
   ) {
     console.log('🎯 [Controller] GET /following called with:', {
       userId,
-      limit,
-      offset,
-      limitType: typeof limit, // Debug: vedi che tipo è
+      query,
     });
 
     try {
-      const limitNumber = limit ? parseInt(limit, 10) : 50;
-      const offsetNumber = offset ? parseInt(offset, 10) : 0;
+      const limit = query.limit ?? 50;
+      const offset = query.offset ?? 0;
 
-      console.log('🔧 [Controller] Converted parameters:', {
-        limitNumber,
-        offsetNumber,
-        limitType: typeof limitNumber,
-        offsetType: typeof offsetNumber,
+      console.log('🔧 [Controller] Using parameters:', {
+        userId,
+        limit,
+        offset,
       });
 
       const result = await this.socialGraphService.getFollowing(
         userId,
-        limitNumber
+        limit,
+        offset
       );
       console.log(
         '✅ [Controller] Get following result:',
@@ -190,18 +177,17 @@ export class SocialGraphController {
   // GET /check-follow/:followerId/:followingId - Controlla se segue
   @Get('check-follow/:followerId/:followingId')
   async checkFollowStatus(
-    @Param('followerId') followerId: string,
-    @Param('followingId') followingId: string
+    @Param(ValidationPipe) checkFollowDto: CheckFollowDto
   ) {
-    console.log('🎯 [Controller] GET /check-follow called with:', {
-      followerId,
-      followingId,
-    });
+    console.log(
+      '🎯 [Controller] GET /check-follow called with:',
+      checkFollowDto
+    );
 
     try {
       const result = await this.socialGraphService.checkFollowStatus(
-        followerId,
-        followingId
+        checkFollowDto.followerId,
+        checkFollowDto.followingId
       );
       console.log('✅ [Controller] Check follow status result:', result);
       return result;
@@ -212,17 +198,6 @@ export class SocialGraphController {
         HttpStatus.BAD_REQUEST
       );
     }
-  }
-
-  // Health check
-  @Get('health')
-  async healthCheck() {
-    console.log('🎯 [Controller] GET /health called');
-    return {
-      status: 'OK',
-      service: 'social-graph-service',
-      timestamp: new Date().toISOString(),
-    };
   }
 
   // Debug endpoints

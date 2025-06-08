@@ -16,6 +16,7 @@ import {
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserService } from '../services/user.service';
+import { toUserResponse } from '../models/user.model';
 
 @Controller('users')
 export class UserController {
@@ -39,11 +40,7 @@ export class UserController {
     return await this.userService.findAll(pageNum, limitNum);
   }
 
-  // ------------------------------------------------------------------------
-  // IMPORTANTE: Le rotte specifiche DEVONO essere prima della rotta parametrica /:id
-  // ------------------------------------------------------------------------
-
-  // GET /users/search?q=query - Cerca utenti (usando query parameter)
+  // GET /users/search?q=query - Cerca utenti
   @Get('search')
   async searchUsers(@Query('q') query: string) {
     if (!query) {
@@ -52,7 +49,7 @@ export class UserController {
     return await this.userService.search(query);
   }
 
-  // GET /users/search/:query - Cerca utenti (usando path parameter per compatibilità con API Gateway)
+  // GET /users/search/:query - Cerca utenti
   @Get('search/:query')
   async searchUsersByPath(@Param('query') query: string) {
     if (!query) {
@@ -67,23 +64,13 @@ export class UserController {
     return await this.userService.getStats();
   }
 
-  // GET /users/health - Health check
-  @Get('health')
-  getHealth() {
-    return {
-      status: 'ok',
-      service: 'user-service',
-      timestamp: new Date().toISOString(),
-    };
-  }
-
   // GET /users/username/:username - Trova utente per username
   @Get('username/:username')
   async findUserByUsername(@Param('username') username: string) {
     return await this.userService.findByUsername(username);
   }
 
-  // POST /users/auth/validate - Valida le credenziali utente (per API Gateway)
+  // POST /users/auth/validate - Valida le credenziali utente
   @Post('auth/validate')
   async validateUser(@Body() validateDto: { email: string; password: string }) {
     console.log('🔍 Validating credentials for:', validateDto.email);
@@ -98,23 +85,29 @@ export class UserController {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      // Ritorna i dati utente (senza password)
-      return {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        fullName: user.fullName,
-        createdAt: user.createdAt,
-      };
+      return toUserResponse(user);
     } catch (error) {
       console.error('Validation error:', error);
       throw new UnauthorizedException('Invalid credentials');
     }
   }
 
-  // ------------------------------------------------------------------------
-  // IMPORTANTE: Le rotte specifiche DEVONO essere prima della rotta parametrica /:id
-  // ------------------------------------------------------------------------
+  // POST /users/:id/change-password - Cambia password utente
+  @Post(':id/change-password')
+  async changePassword(
+    @Param('id') id: string,
+    @Body()
+    changePasswordDto: {
+      currentPassword: string;
+      newPassword: string;
+    }
+  ) {
+    return await this.userService.changePassword(
+      id,
+      changePasswordDto.currentPassword,
+      changePasswordDto.newPassword
+    );
+  }
 
   // GET /users/:id - Trova utente per ID
   @Get(':id')

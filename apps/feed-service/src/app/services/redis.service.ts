@@ -19,6 +19,33 @@ export class RedisService {
     return `feed:meta:${userId}`;
   }
 
+  async setGenericCache(
+    key: string,
+    value: string,
+    ttl: number = 3600
+  ): Promise<void> {
+    try {
+      await this.redis.setex(key, ttl, value);
+      this.logger.log(`Cache impostata per chiave ${key} con TTL ${ttl}s`);
+    } catch (error) {
+      this.logger.error(`Errore impostando cache per ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async getGenericCache(key: string): Promise<string | null> {
+    try {
+      const value = await this.redis.get(key);
+      if (value) {
+        this.logger.log(`Cache hit per chiave ${key}`);
+      }
+      return value;
+    } catch (error) {
+      this.logger.error(`Errore recuperando cache per ${key}:`, error);
+      return null;
+    }
+  }
+
   // Salva il feed dell'utente in Redis
   async saveFeed(userId: string, feed: FeedItem[]): Promise<void> {
     const feedKey = this.getUserFeedKey(userId);
@@ -70,6 +97,7 @@ export class RedisService {
       // Controlla se il feed esiste
       const exists = await this.redis.exists(feedKey);
       if (!exists) {
+        this.logger.log(`Feed non trovato in cache per utente ${userId}`);
         return null;
       }
 
@@ -79,15 +107,41 @@ export class RedisService {
         offset,
         offset + limit - 1
       );
+
+      // Recupera il totale degli item
+      const totalItems = await this.redis.llen(feedKey);
       const metadata = await this.redis.hgetall(metaKey);
 
-      const items: FeedItem[] = feedData.map((item) => JSON.parse(item));
+      if (feedData.length === 0 && offset > 0) {
+        this.logger.log(`Offset ${offset} fuori range per utente ${userId}`);
+        return {
+          userId,
+          items: [],
+          lastUpdated: new Date(metadata.lastUpdated || new Date()),
+          totalItems: totalItems || 0,
+        };
+      }
+
+      const items: FeedItem[] = feedData
+        .map((item) => {
+          try {
+            return JSON.parse(item);
+          } catch (parseError) {
+            this.logger.error(`Errore parsing item feed:`, parseError);
+            return null;
+          }
+        })
+        .filter((item) => item !== null);
+
+      this.logger.log(
+        `Feed recuperato da cache per utente ${userId}: ${items.length}/${totalItems} items (offset: ${offset})`
+      );
 
       return {
         userId,
         items,
         lastUpdated: new Date(metadata.lastUpdated || new Date()),
-        totalItems: parseInt(metadata.totalItems || '0'),
+        totalItems: totalItems || 0,
       };
     } catch (error) {
       this.logger.error(`Errore recuperando feed per utente ${userId}:`, error);

@@ -11,30 +11,21 @@ import {
   Logger,
   ValidationPipe,
   UsePipes,
+  BadRequestException,
 } from '@nestjs/common';
 import { FeedService } from '../services/feed.service';
-import {
-  GetFeedDto,
-  RefreshFeedDto,
-  TrendingPostsDto,
-  RecentPostsDto,
-} from '../dto/get-feed.dto';
+import { GetFeedDto } from '../dto/get-feed.dto';
+import { RefreshFeedDto } from '../dto/refresh-feed.dto';
+import { GetTimelineDto } from '../dto/get-timeline.dto';
+import { TrendingPostsDto } from '../dto/trending-posts.dto';
+import { RecentPostsDto } from '../dto/recent-posts.dto';
+import { TimelineParamsDto } from '../dto/timeline-params.dto';
 
 @Controller('feed')
 export class FeedController {
   private readonly logger = new Logger(FeedController.name);
 
   constructor(private readonly feedService: FeedService) {}
-
-  @Get('health')
-  @HttpCode(HttpStatus.OK)
-  getHealth() {
-    return {
-      status: 'ok',
-      service: 'feed-service',
-      timestamp: new Date().toISOString(),
-    };
-  }
 
   // GET /feed - Recupera il feed dell'utente (chiamato dall'API Gateway)
   @Get()
@@ -45,7 +36,7 @@ export class FeedController {
 
       // Converte page in offset per compatibilità
       const pageNum = query.page || 1;
-      const limitNum = query.limit || 10;
+      const limitNum = query.limit || 20;
       const offset = (pageNum - 1) * limitNum;
 
       const feed = await this.feedService.getFeed(
@@ -64,7 +55,7 @@ export class FeedController {
     }
   }
 
-  // POST /feed/refresh - Rigenera il feed dell'utente (chiamato dall'API Gateway)
+  // POST /feed/refresh - Rigenera il feed dell'utente
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -85,7 +76,7 @@ export class FeedController {
     }
   }
 
-  // DELETE /feed/cache/:userId - Invalida il feed dell'utente (chiamato dall'API Gateway)
+  // DELETE /feed/cache/:userId - Invalida il feed dell'utente
   @Delete('cache/:userId')
   @HttpCode(HttpStatus.OK)
   async clearFeedCache(@Param('userId') userId: string) {
@@ -105,10 +96,40 @@ export class FeedController {
     }
   }
 
-  // GET /timeline - Timeline cronologica per l'utente
+  // GET /timeline/:userId - Timeline cronologica per l'utente (con userId obbligatorio nei path params)
+  @Get('timeline/:userId')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getTimelineByUserId(
+    @Param('userId') userId: string,
+    @Query() query: TimelineParamsDto
+  ) {
+    try {
+      this.logger.log(`Richiesta timeline per utente ${userId}`);
+
+      const pageNum = query.page || 1;
+      const limitNum = query.limit || 20;
+      const offset = (pageNum - 1) * limitNum;
+
+      const timeline = await this.feedService.getTimeline(
+        userId,
+        limitNum,
+        offset
+      );
+
+      return {
+        success: true,
+        data: timeline,
+      };
+    } catch (error) {
+      this.logger.error(`Errore recuperando timeline per ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  // GET /timeline - Timeline con userId nei query params
   @Get('timeline')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async getTimeline(@Query() query: GetFeedDto) {
+  async getTimeline(@Query() query: GetTimelineDto) {
     try {
       this.logger.log(`Richiesta timeline per utente ${query.userId}`);
 
@@ -135,22 +156,16 @@ export class FeedController {
     }
   }
 
-  // GET /trending - Post in tendenza
+  // GET /trending - Post in tendenza (non richiede userId)
   @Get('trending')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async getTrending(
-    @Query('limit') limit?: number,
-    @Query('timeframe') timeframe?: string
-  ) {
+  async getTrending(@Query() query: TrendingPostsDto) {
     try {
       this.logger.log('Richiesta trending posts');
 
-      const limitNum = limit || 10;
-      const timeframeStr = timeframe || '24h';
-
       const trending = await this.feedService.getTrending(
-        limitNum,
-        timeframeStr
+        query.limit || 10,
+        query.timeframe || '24h'
       );
 
       return {
@@ -163,18 +178,15 @@ export class FeedController {
     }
   }
 
-  // GET /recent - Post più recenti
+  // GET /recent - Post più recenti (non richiede userId)
   @Get('recent')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async getRecent(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number
-  ) {
+  async getRecent(@Query() query: RecentPostsDto) {
     try {
       this.logger.log('Richiesta recent posts');
 
-      const pageNum = page || 1;
-      const limitNum = limit || 20;
+      const pageNum = query.page || 1;
+      const limitNum = query.limit || 20;
       const offset = (pageNum - 1) * limitNum;
 
       const recent = await this.feedService.getRecent(limitNum, offset);
@@ -236,100 +248,7 @@ export class FeedController {
     }
   }
 
-  // ????? ENDPOINTS ORIGINALI (per compatibilità con eventuali chiamate dirette)
-
-  // GET /feed/:userId - Recupera il feed dell'utente (endpoint originale)
-  // @Get(':userId')
-  // @UsePipes(new ValidationPipe({ transform: true }))
-  // async getFeedByParam(
-  //   @Param('userId') userId: string,
-  //   @Query('limit') limit?: number,
-  //   @Query('offset') offset?: number
-  // ) {
-  //   try {
-  //     this.logger.log(
-  //       `Richiesta feed per utente ${userId} (endpoint originale)`
-  //     );
-
-  //     const feed = await this.feedService.getFeed(
-  //       userId,
-  //       limit || 20,
-  //       offset || 0
-  //     );
-
-  //     return {
-  //       success: true,
-  //       data: feed,
-  //     };
-  //   } catch (error) {
-  //     this.logger.error(`Errore recuperando feed per ${userId}:`, error);
-  //     throw error;
-  //   }
-  // }
-
-  // POST /feed/:userId/refresh - Rigenera il feed dell'utente (endpoint originale)
-  // @Post(':userId/refresh')
-  // @HttpCode(HttpStatus.OK)
-  // async refreshFeedByParam(@Param('userId') userId: string) {
-  //   try {
-  //     this.logger.log(
-  //       `Richiesta refresh feed per utente ${userId} (endpoint originale)`
-  //     );
-
-  //     await this.feedService.refreshFeed(userId);
-
-  //     return {
-  //       success: true,
-  //       message: 'Feed rigenerato con successo',
-  //       timestamp: new Date().toISOString(),
-  //     };
-  //   } catch (error) {
-  //     this.logger.error(`Errore refresh feed per ${userId}:`, error);
-  //     throw error;
-  //   }
-  // }
-
-  // DELETE /feed/:userId - Invalida il feed dell'utente (endpoint originale)
-  // @Delete(':userId')
-  // @HttpCode(HttpStatus.OK)
-  // async invalidateFeedByParam(@Param('userId') userId: string) {
-  //   try {
-  //     this.logger.log(
-  //       `Richiesta invalidazione feed per utente ${userId} (endpoint originale)`
-  //     );
-
-  //     await this.feedService.invalidateFeed(userId);
-
-  //     return {
-  //       success: true,
-  //       message: 'Feed invalidato con successo',
-  //       timestamp: new Date().toISOString(),
-  //     };
-  //   } catch (error) {
-  //     this.logger.error(`Errore invalidando feed per ${userId}:`, error);
-  //     throw error;
-  //   }
-  // }
-
-  // GET /feed/:userId/stats - Statistiche del feed (endpoint originale)
-  // @Get(':userId/stats')
-  // async getFeedStats(@Param('userId') userId: string) {
-  //   try {
-  //     const stats = await this.feedService.getFeedStats(userId);
-
-  //     return {
-  //       success: true,
-  //       data: stats,
-  //     };
-  //   } catch (error) {
-  //     this.logger.error(`Errore recuperando stats per ${userId}:`, error);
-  //     throw error;
-  //   }
-  // }
-
-  // WEBHOOK ENDPOINTS (per compatibilità con altri servizi)
-
-  // POST /webhook/new-post - Webhook per nuovi post
+  // WEBHOOK ENDPOINTS
   @Post('webhook/new-post')
   @HttpCode(HttpStatus.OK)
   async handleNewPost(@Body() body: { authorId: string }) {
@@ -351,7 +270,6 @@ export class FeedController {
     }
   }
 
-  // POST /webhook/follow-change - Webhook per cambi di follow
   @Post('webhook/follow-change')
   @HttpCode(HttpStatus.OK)
   async handleFollowChange(@Body() body: { userId: string }) {

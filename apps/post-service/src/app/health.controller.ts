@@ -9,6 +9,11 @@ export class HealthController {
   @Get()
   async check() {
     const isConnected = this.connection.readyState === 1;
-    return { status: isConnected ? 'ok' : 'error', db: 'mongodb' };
+    return {
+      status: isConnected ? 'ok' : 'error',
+      service: 'post-service',
+      db: 'mongodb',
+      timestamp: new Date().toISOString(),
+    };
   }
 }

@@ -7,9 +7,20 @@ import {
   Query,
   UseGuards,
   Request,
+  ValidationPipe,
+  UsePipes,
+  Body,
 } from '@nestjs/common';
 import { MicroserviceService } from '../services/microservice.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { GetFeedDto } from '../dto/feed/get-feed.dto';
+import { GetTimelineDto } from '../dto/feed/get-timeline.dto';
+import { TrendingPostsDto } from '../dto/feed/trending-posts.dto';
+import { RecentPostsDto } from '../dto/feed/recent-posts.dto';
+import {
+  FollowChangeWebhookDto,
+  NewPostWebhookDto,
+} from '../dto/feed/cache-update.dto';
 
 @Controller('feed')
 export class FeedController {
@@ -21,10 +32,8 @@ export class FeedController {
    */
   @UseGuards(JwtAuthGuard)
   @Get()
-  async getUserFeed(
-    @Request() req,
-    @Query() query: { page?: number; limit?: number }
-  ) {
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getUserFeed(@Request() req, @Query() query: GetFeedDto) {
     const userId = req.user.userId;
     console.log('📰 Getting feed for user:', userId);
 
@@ -70,14 +79,12 @@ export class FeedController {
 
   /**
    * GET /api/feed/timeline
-   * Ottieni timeline cronologica (tutti i post recenti) (protetto)
+   * Ottieni timeline cronologica (protetto)
    */
   @UseGuards(JwtAuthGuard)
   @Get('timeline')
-  async getTimeline(
-    @Request() req,
-    @Query() query: { page?: number; limit?: number }
-  ) {
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getTimeline(@Request() req, @Query() query: GetTimelineDto) {
     const userId = req.user.userId;
     console.log('⏰ Getting timeline for user:', userId);
 
@@ -87,7 +94,11 @@ export class FeedController {
       limit: query.limit || 20,
     };
 
-    return await this.microserviceService.get('feed', '/timeline', queryParams);
+    return await this.microserviceService.get(
+      'feed',
+      '/feed/timeline',
+      queryParams
+    );
   }
 
   /**
@@ -95,17 +106,20 @@ export class FeedController {
    * Ottieni post in tendenza (pubblico)
    */
   @Get('trending')
-  async getTrendingPosts(
-    @Query() query: { limit?: number; timeframe?: string }
-  ) {
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getTrendingPosts(@Query() query: TrendingPostsDto) {
     console.log('🔥 Getting trending posts');
 
     const queryParams = {
       limit: query.limit || 10,
-      timeframe: query.timeframe || '24h', // 24h, 7d, 30d
+      timeframe: query.timeframe || '24h',
     };
 
-    return await this.microserviceService.get('feed', '/trending', queryParams);
+    return await this.microserviceService.get(
+      'feed',
+      '/feed/trending',
+      queryParams
+    );
   }
 
   /**
@@ -113,16 +127,19 @@ export class FeedController {
    * Ottieni post più recenti (pubblico)
    */
   @Get('recent')
-  async getRecentPosts(@Query() query: { page?: number; limit?: number }) {
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getRecentPosts(@Query() query: RecentPostsDto) {
     console.log('🆕 Getting recent posts');
 
-    return await this.microserviceService.get('feed', '/recent', query);
+    return await this.microserviceService.get('feed', '/feed/recent', {
+      page: query.page || 1,
+      limit: query.limit || 10,
+    });
   }
 
   /**
    * POST /api/feed/update-cache/:postId
    * Aggiorna cache quando viene creato/modificato un post
-   * (Questo endpoint sarà chiamato dagli altri microservizi)
    */
   @Post('update-cache/:postId')
   async updateCacheForPost(@Param('postId') postId: string) {
@@ -130,15 +147,14 @@ export class FeedController {
 
     return await this.microserviceService.post(
       'feed',
-      `/update-cache/${postId}`,
+      `/feed/update-cache/${postId}`,
       {}
     );
   }
 
   /**
    * POST /api/feed/update-social/:userId
-   * Aggiorna cache quando cambiano le relazioni sociali
-   * (Questo endpoint sarà chiamato dal Social Graph Service)
+   * Aggiorna cache per cambiamenti sociali
    */
   @Post('update-social/:userId')
   async updateCacheForSocialChange(@Param('userId') userId: string) {
@@ -146,8 +162,44 @@ export class FeedController {
 
     return await this.microserviceService.post(
       'feed',
-      `/update-social/${userId}`,
+      `/feed/update-social/${userId}`,
       {}
+    );
+  }
+
+  /**
+   * WEBHOOK ENDPOINTS
+   */
+
+  /**
+   * POST /api/feed/webhook/new-post
+   * Webhook per notificare nuovo post
+   */
+  @Post('webhook/new-post')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async handleNewPostWebhook(@Body() body: NewPostWebhookDto) {
+    console.log('🔔 New post webhook received');
+
+    return await this.microserviceService.post(
+      'feed',
+      `/feed/webhook/new-post`,
+      body
+    );
+  }
+
+  /**
+   * POST /api/feed/webhook/follow-change
+   * Webhook per notificare cambiamento follow/unfollow
+   */
+  @Post('webhook/follow-change')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async handleFollowChangeWebhook(@Body() body: FollowChangeWebhookDto) {
+    console.log('🔔 Follow change webhook received');
+
+    return await this.microserviceService.post(
+      'feed',
+      `/feed/webhook/follow-change`,
+      body
     );
   }
 }
