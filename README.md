@@ -1,3 +1,12 @@
+Per convertire pdf presentazione con pandoc (serve averlo installato):
+
+````bash
+pandoc project-presentation.md -o project-presentation.pdf --pdf-engine=xelatex
+```bash
+
+---
+
+
 Premessa:
 
 > Per scopi didattici tutte le `origin` sono state impostate a `*` oppure a `true`
@@ -8,7 +17,7 @@ Per user-service, necessario:
 cd apps/user-service
 
 npx prisma generate
-```
+````
 
 Nel caso non ci fossero ancora problemi deve essere fatto anche su docker (una volta avviato):
 
