@@ -97,7 +97,7 @@
             d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
           ></path>
         </svg>
-        Your Posts
+        I Tuoi Post
       </h2>
       <div class="flex space-x-2">
         <button
@@ -143,7 +143,13 @@
     ></div>
 
     <!-- Componente post list -->
-    <app-post-list [posts]="userPosts" [isLoading]="isLoading"></app-post-list>
+    <app-post-list
+      [posts]="userPosts"
+      [user]="user"
+      [isLoading]="isLoading"
+      [currentUserId]="user?.id"
+    >
+    </app-post-list>
   </div>
 
   <!-- Modali -->

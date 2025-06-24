@@ -1,17 +1,19 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Post } from '../../../../models/post.model';
+import { User } from '../../../../models/user.model';
 import { PostService } from '../../../../services/post/post.service';
+import { AvatarComponent } from '../../../../shared/components/user/avatar.component';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AvatarComponent],
   templateUrl: './post-list.component.html',
-  styleUrls: ['./post-list.component.css'],
 })
 export class PostListComponent implements OnInit {
   @Input() posts: Post[] = [];
+  @Input() user: User | null = null; // Aggiungiamo l'input per l'utente
   @Input() isLoading = false;
   @Input() hasMorePosts = false;
   @Input() currentUserId?: string;
@@ -44,15 +46,15 @@ export class PostListComponent implements OnInit {
     const diffInDays = Math.floor(diffInHours / 24);
 
     if (diffInMinutes < 1) {
-      return 'Just now';
+      return 'Ora';
     } else if (diffInMinutes < 60) {
-      return `${diffInMinutes}m ago`;
+      return `${diffInMinutes}m fa`;
     } else if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
+      return `${diffInHours}h fa`;
     } else if (diffInDays < 7) {
-      return `${diffInDays}d ago`;
+      return `${diffInDays}g fa`;
     } else {
-      return date.toLocaleDateString();
+      return date.toLocaleDateString('it-IT');
     }
   }
 
@@ -104,7 +106,7 @@ export class PostListComponent implements OnInit {
 
   // Metodo per eliminare post
   deletePost(postId: string): void {
-    if (confirm('Are you sure you want to delete this post?')) {
+    if (confirm('Sei sicuro di voler eliminare questo post?')) {
       this.postService.deletePost(postId).subscribe({
         next: () => {
           console.log('Post deleted:', postId);

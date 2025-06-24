@@ -12,13 +12,13 @@ import { SocialService } from '../../../../services/user/social.service';
 import { UserService } from '../../../../services/user/user.service';
 import { CoverPhotoComponent } from '../../../../shared/components/user/cover-photo.component';
 import { AvatarComponent } from '../../../../shared/components/user/avatar.component';
+import { BadgeComponent } from '../../../../shared/components/user/badge.component';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, AvatarComponent, CoverPhotoComponent],
+  imports: [CommonModule, AvatarComponent, CoverPhotoComponent, BadgeComponent],
   templateUrl: './user-profile.component.html',
-  styleUrls: ['./user-profile.component.css'],
 })
 export class UserProfileComponent implements OnInit {
   user: User | null = null;
