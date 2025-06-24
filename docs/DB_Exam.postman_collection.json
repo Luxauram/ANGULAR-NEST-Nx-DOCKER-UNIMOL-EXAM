@@ -1,0 +1,2489 @@
+{
+	"info": {
+		"_postman_id": "e553d66f-e224-4bdd-ab65-7e7c2731855f",
+		"name": "DB_Exam",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26911797",
+		"_collection_link": "https://newunimolteam.postman.co/workspace/Esame_DB_Angular_Nest_Docker~4158d1c6-25e1-4bf3-9056-7e3d39cdf838/collection/26911797-e553d66f-e224-4bdd-ab65-7e7c2731855f?action=share&source=collection_link&creator=26911797"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check API",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/api/health",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{USER_URL}}/health",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check Post",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{POST_URL}}/health",
+							"host": [
+								"{{POST_URL}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check Feed",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{FEED_URL}}/health",
+							"host": [
+								"{{FEED_URL}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check Social Graph",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SOCIAL_GRAPH_URL}}/health",
+							"host": [
+								"{{SOCIAL_GRAPH_URL}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "API-Gateway - Auth",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"final@example.com\",\r\n  \"password\": \"ciaociao\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/api/auth/login",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "API-Gateway - Feed APIs",
+			"item": [
+				{
+					"name": "Get User Feed",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"description": "JWT Authentication Token"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/feed?page=1&limit=10",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"feed"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh User Feed",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"description": "JWT Authentication Token"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/feed/refresh",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"feed",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Clear Feed Cache",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"description": "JWT Authentication Token"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/feed/cache",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"feed",
+								"cache"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Timeline",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"description": "JWT Authentication Token"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/feed/timeline?page=1&limit=10",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"feed",
+								"timeline"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trending Posts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/feed/trending?limit=10&timeframe=1",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"feed",
+								"trending"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "timeframe",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recent Posts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/feed/recent?page=1&limit=10",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"feed",
+								"recent"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Cache for Post",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/feed/update-cache/:postId",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"feed",
+								"update-cache",
+								":postId"
+							],
+							"variable": [
+								{
+									"key": "postId",
+									"value": "683f52d7ce89c2a7ad3890b8"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Cache for Social Change",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/feed/update-social/:userId",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"feed",
+								"update-social",
+								":userId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "6c37744d-d79a-41ab-983b-278556a48009"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "API-Gateway - Post APIs",
+			"item": [
+				{
+					"name": "Create Post",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Test Post4\",\n  \"content\": \"This is a test post content\",\n  \"tags\": [\"test\", \"api\"],\n  \"isPublic\": true\n}"
+						},
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/posts",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"posts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Posts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/posts?page=1&limit=10&tag=nestjs",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"posts"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "tag",
+									"value": "nestjs"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Posts by Author",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/posts/user/:id",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"posts",
+								"user",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "9879efc1-e54b-4cc3-aade-1994cc879cd2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Post by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/posts/:id",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"posts",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f62a3e5db85076f2fcbee"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Post",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-user-id",
+								"value": "123"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Updated post content\",\n  \"tags\": [\"update\", \"nestjs\"]\n}"
+						},
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/posts/:id",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"posts",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f62a3e5db85076f2fcbee"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Post",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-user-id",
+								"value": "123"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/posts/:id",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"posts",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f62a3e5db85076f2fcbee"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Like Post",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/posts/:id/like",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"posts",
+								":id",
+								"like"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f62a3e5db85076f2fcbee"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unlike Post",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/posts/:id/unlike",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"posts",
+								":id",
+								"unlike"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f62a3e5db85076f2fcbee"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Increment Comments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/posts/:id/increment-comments",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"posts",
+								":id",
+								"increment-comments"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f62a3e5db85076f2fcbee"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "API-Gateway - Social Graph APIs",
+			"item": [
+				{
+					"name": "Sync User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"userId\": \"02ce6b9e-e60e-4b04-8b2f-8dfc84d7e8ed\",\r\n  \"username\": \"moreno\",\r\n  \"email\": \"moreno@mail.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/social/sync-user",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"social",
+								"sync-user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Follow User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <JWT_TOKEN>"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"targetUserId\": \"01eccf0b-3b0d-48d9-a01d-f65fcf19d8cc\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/social/follow",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"social",
+								"follow"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unfollow User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <JWT_TOKEN>"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/social/follow/:targetUserId",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"social",
+								"follow",
+								":targetUserId"
+							],
+							"variable": [
+								{
+									"key": "targetUserId",
+									"value": "ad9274a0-9698-4c58-b541-cf9007ac70b6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Followers",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/social/followers/:userId?limit=10&offset=0",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"social",
+								"followers",
+								":userId"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "6c37744d-d79a-41ab-983b-278556a48009"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Following",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/social/following/:userId?limit=10&offset=0",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"social",
+								"following",
+								":userId"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "6c37744d-d79a-41ab-983b-278556a48009"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Followers",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_CURRENT}}"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/social/followers/me?limit=10&offset=0",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"social",
+								"followers",
+								"me"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Following",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <JWT_TOKEN>"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/social/following/me?limit=10&offset=0",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"social",
+								"following",
+								"me"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Relationship",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <JWT_TOKEN>"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/social/relationship/:targetUserId",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"social",
+								"relationship",
+								":targetUserId"
+							],
+							"variable": [
+								{
+									"key": "targetUserId",
+									"value": "01eccf0b-3b0d-48d9-a01d-f65fcf19d8cc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Social Stats",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/social/stats/:userId",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"social",
+								"stats",
+								":userId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "6c37744d-d79a-41ab-983b-278556a48009"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Follow Suggestions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT_CURRENT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <JWT_TOKEN>"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/{{API}}/social/suggestions?limit=10",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"{{API}}",
+								"social",
+								"suggestions"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "API-Gateway - User APIs",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"final\",\r\n  \"email\": \"final@example.com\",\r\n  \"password\": \"ciaociao\",\r\n  \"firstName\": \"Test-API\",\r\n  \"lastName\": \"User-API\",\r\n  \"bio\": \"This is a bio\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/api/users",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyYmQ1MzlhYy0xMzNkLTQwNzEtODY0NS1lZjZhMDEyNTdhNjIiLCJlbWFpbCI6InRlc3R1c2VyYXBpQGV4YW1wbGUuY29tIiwidXNlcm5hbWUiOiJ0ZXN0dXNlci1BUEkiLCJpYXQiOjE3NDg4ODA2MzYsImV4cCI6MTc0ODk2NzAzNn0.-CjHawOfeFONXD9-oMnI1gXS940vtUpdR6fedpWtOe8",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <your_jwt_token>"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/api/users/profile",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Stats",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyYmQ1MzlhYy0xMzNkLTQwNzEtODY0NS1lZjZhMDEyNTdhNjIiLCJlbWFpbCI6InRlc3R1c2VyYXBpQGV4YW1wbGUuY29tIiwidXNlcm5hbWUiOiJ0ZXN0dXNlci1BUEkiLCJpYXQiOjE3NDg4ODA2MzYsImV4cCI6MTc0ODk2NzAzNn0.-CjHawOfeFONXD9-oMnI1gXS940vtUpdR6fedpWtOe8",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <your_jwt_token>"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/api/users/stats",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyYmQ1MzlhYy0xMzNkLTQwNzEtODY0NS1lZjZhMDEyNTdhNjIiLCJlbWFpbCI6InRlc3R1c2VyYXBpQGV4YW1wbGUuY29tIiwidXNlcm5hbWUiOiJ0ZXN0dXNlci1BUEkiLCJpYXQiOjE3NDg4ODA2MzYsImV4cCI6MTc0ODk2NzAzNn0.-CjHawOfeFONXD9-oMnI1gXS940vtUpdR6fedpWtOe8",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <your_jwt_token>"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/api/users/search/:username",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"search",
+								":username"
+							],
+							"variable": [
+								{
+									"key": "username",
+									"value": "testuser-API"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/api/users/:id",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "2bd539ac-133d-4071-8645-ef6a01257a62"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Current User Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <your_jwt_token>"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"firstName\": \"Updated\", \"lastName\": \"User\", \"bio\": \"Updated bio\"}"
+						},
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/api/users/profile",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Current User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <your_jwt_token>"
+							}
+						],
+						"url": {
+							"raw": "{{API_GATEWAY_URL}}/api/users/profile",
+							"host": [
+								"{{API_GATEWAY_URL}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Feed Service API",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{FEED_URL}}/feed/health",
+							"host": [
+								"{{FEED_URL}}"
+							],
+							"path": [
+								"feed",
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Feed",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{FEED_URL}}/feed?userId=9c5d1428-56d6-4e0e-854a-6f122b4eda84&page=1&limit=10",
+							"host": [
+								"{{FEED_URL}}"
+							],
+							"path": [
+								"feed"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "9c5d1428-56d6-4e0e-854a-6f122b4eda84"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Feed",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\": \"9c5d1428-56d6-4e0e-854a-6f122b4eda84\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{FEED_URL}}/feed/refresh",
+							"host": [
+								"{{FEED_URL}}"
+							],
+							"path": [
+								"feed",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Clear Feed Cache",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{FEED_URL}}/feed/cache/:userId",
+							"host": [
+								"{{FEED_URL}}"
+							],
+							"path": [
+								"feed",
+								"cache",
+								":userId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "6c37744d-d79a-41ab-983b-278556a48009"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Timeline",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{FEED_URL}}/feed/timeline?userId=9c5d1428-56d6-4e0e-854a-6f122b4eda84&page=1&limit=10",
+							"host": [
+								"{{FEED_URL}}"
+							],
+							"path": [
+								"feed",
+								"timeline"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "9c5d1428-56d6-4e0e-854a-6f122b4eda84"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trending Posts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{FEED_URL}}/feed/trending?limit=10&timeframe=1",
+							"host": [
+								"{{FEED_URL}}"
+							],
+							"path": [
+								"feed",
+								"trending"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "timeframe",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recent Posts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{FEED_URL}}/feed/recent?page=1&limit=10",
+							"host": [
+								"{{FEED_URL}}"
+							],
+							"path": [
+								"feed",
+								"recent"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Cache for Post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{FEED_URL}}/feed/update-cache/:postId",
+							"host": [
+								"{{FEED_URL}}"
+							],
+							"path": [
+								"feed",
+								"update-cache",
+								":postId"
+							],
+							"variable": [
+								{
+									"key": "postId",
+									"value": "111"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Cache for Social Change",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{FEED_URL}}/feed/update-social/:userId",
+							"host": [
+								"{{FEED_URL}}"
+							],
+							"path": [
+								"feed",
+								"update-social",
+								":userId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "9c5d1428-56d6-4e0e-854a-6f122b4eda84"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Webhook New Post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"authorId\": \"{{authorId}}\"}"
+						},
+						"url": {
+							"raw": "{{FEED_URL}}/feed/webhook/new-post",
+							"host": [
+								"{{FEED_URL}}"
+							],
+							"path": [
+								"feed",
+								"webhook",
+								"new-post"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Webhook Follow Change",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"userId\": \"{{userId}}\"}"
+						},
+						"url": {
+							"raw": "{{FEED_URL}}feed/webhook/follow-change",
+							"host": [
+								"{{FEED_URL}}feed"
+							],
+							"path": [
+								"webhook",
+								"follow-change"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Post Service API",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{POST_URL}}/posts/health/check",
+							"host": [
+								"{{POST_URL}}"
+							],
+							"path": [
+								"posts",
+								"health",
+								"check"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Post",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"This is a new post2\",\n  \"userId\": \"123\",\n  \"tags\": [\"nestjs\", \"api\"],\n  \"isPublic\": true\n}"
+						},
+						"url": {
+							"raw": "{{POST_URL}}/posts",
+							"host": [
+								"{{POST_URL}}"
+							],
+							"path": [
+								"posts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Posts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{POST_URL}}/posts?page=1&limit=100&tag=",
+							"host": [
+								"{{POST_URL}}"
+							],
+							"path": [
+								"posts"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "tag",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Posts by Author",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{POST_URL}}/posts/user/:id",
+							"host": [
+								"{{POST_URL}}"
+							],
+							"path": [
+								"posts",
+								"user",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "02ce6b9e-e60e-4b04-8b2f-8dfc84d7e8ed"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Post by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{POST_URL}}/posts/:id",
+							"host": [
+								"{{POST_URL}}"
+							],
+							"path": [
+								"posts",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f4647dcfc02d90a5e222d"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Post",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-user-id",
+								"value": "123"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Updated post content\",\n  \"tags\": [\"update\", \"nestjs\"]\n}"
+						},
+						"url": {
+							"raw": "{{POST_URL}}/posts/:id",
+							"host": [
+								"{{POST_URL}}"
+							],
+							"path": [
+								"posts",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f4647dcfc02d90a5e222d"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Post",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-user-id",
+								"value": "123"
+							}
+						],
+						"url": {
+							"raw": "{{POST_URL}}/posts/:id",
+							"host": [
+								"{{POST_URL}}"
+							],
+							"path": [
+								"posts",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f4b3b48d389f7895cd491"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Like Post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{POST_URL}}/posts/:id/like",
+							"host": [
+								"{{POST_URL}}"
+							],
+							"path": [
+								"posts",
+								":id",
+								"like"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f4647dcfc02d90a5e222d"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unlike Post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{POST_URL}}/posts/:id/unlike",
+							"host": [
+								"{{POST_URL}}"
+							],
+							"path": [
+								"posts",
+								":id",
+								"unlike"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f4647dcfc02d90a5e222d"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Increment Comments",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{POST_URL}}/posts/:id/increment-comments",
+							"host": [
+								"{{POST_URL}}"
+							],
+							"path": [
+								"posts",
+								":id",
+								"increment-comments"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "683f4647dcfc02d90a5e222d"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Social Graph API",
+			"item": [
+				{
+					"name": "Sync User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": "Content-Type of the request"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\": \"9b671183-92a9-4db3-8b3d-70297d64496d\", \r\n    \"username\": \"Babubs\", \r\n    \"email\": \"babubs@mail.com\"\r\n}"
+						},
+						"url": {
+							"raw": "{{SOCIAL_GRAPH_URL}}/sync-user",
+							"host": [
+								"{{SOCIAL_GRAPH_URL}}"
+							],
+							"path": [
+								"sync-user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Follow User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": "Content-Type of the request"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"followerId\": \"ad9274a0-9698-4c58-b541-cf9007ac70b6\", \r\n    \"followingId\": \"83fd917a-1d41-437d-8a4a-bef3215d6323\"\r\n}"
+						},
+						"url": {
+							"raw": "{{SOCIAL_GRAPH_URL}}/follow",
+							"host": [
+								"{{SOCIAL_GRAPH_URL}}"
+							],
+							"path": [
+								"follow"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unfollow User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{SOCIAL_GRAPH_URL}}/follow/:followerId/:followingId",
+							"host": [
+								"{{SOCIAL_GRAPH_URL}}"
+							],
+							"path": [
+								"follow",
+								":followerId",
+								":followingId"
+							],
+							"variable": [
+								{
+									"key": "followerId",
+									"value": "ad9274a0-9698-4c58-b541-cf9007ac70b6"
+								},
+								{
+									"key": "followingId",
+									"value": "83fd917a-1d41-437d-8a4a-bef3215d6323"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Followers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SOCIAL_GRAPH_URL}}/followers/:userId?limit=10",
+							"host": [
+								"{{SOCIAL_GRAPH_URL}}"
+							],
+							"path": [
+								"followers",
+								":userId"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "ad9274a0-9698-4c58-b541-cf9007ac70b6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Following",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SOCIAL_GRAPH_URL}}/following/:userId?limit=10",
+							"host": [
+								"{{SOCIAL_GRAPH_URL}}"
+							],
+							"path": [
+								"following",
+								":userId"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "ad9274a0-9698-4c58-b541-cf9007ac70b6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SOCIAL_GRAPH_URL}}/stats/:userId",
+							"host": [
+								"{{SOCIAL_GRAPH_URL}}"
+							],
+							"path": [
+								"stats",
+								":userId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "ad9274a0-9698-4c58-b541-cf9007ac70b6"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Follow Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SOCIAL_GRAPH_URL}}/check-follow/:followerId/:followingId",
+							"host": [
+								"{{SOCIAL_GRAPH_URL}}"
+							],
+							"path": [
+								"check-follow",
+								":followerId",
+								":followingId"
+							],
+							"variable": [
+								{
+									"key": "followerId",
+									"value": "ad9274a0-9698-4c58-b541-cf9007ac70b6"
+								},
+								{
+									"key": "followingId",
+									"value": "83fd917a-1d41-437d-8a4a-bef3215d6323"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "NO PROD - Debug | Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SOCIAL_GRAPH_URL}}/debug/users",
+							"host": [
+								"{{SOCIAL_GRAPH_URL}}"
+							],
+							"path": [
+								"debug",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "NO PROD - Debug | Relationships",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SOCIAL_GRAPH_URL}}/debug/relationships",
+							"host": [
+								"{{SOCIAL_GRAPH_URL}}"
+							],
+							"path": [
+								"debug",
+								"relationships"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "NO PROD - Debug | Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SOCIAL_GRAPH_URL}}/debug/info",
+							"host": [
+								"{{SOCIAL_GRAPH_URL}}"
+							],
+							"path": [
+								"debug",
+								"info"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Service API",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"utente_social_16\",\r\n  \"email\": \"utente_social_16@example.com\",\r\n  \"password\": \"password123\",\r\n  \"firstName\": \"Social\",\r\n  \"lastName\": \"Utente\",\r\n  \"bio\": \"This is a bio\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{USER_URL}}/users",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{USER_URL}}/users?page=1&limit=10",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{USER_URL}}/users/search?q=test",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"users",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "test"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{USER_URL}}/users/stats",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"users",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{USER_URL}}/users/health",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"users",
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{USER_URL}}/users/:id",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "6ff6b20b-5662-4648-9947-9b615a8c630f"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by Username",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{USER_URL}}/users/username/:username",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"users",
+								"username",
+								":username"
+							],
+							"variable": [
+								{
+									"key": "username",
+									"value": "testuser"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"updatedUser\", \r\n    \"firstName\": \"Updated\",\r\n    \"lastName\": \"User\"\r\n    }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{USER_URL}}/users/:id",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "6ff6b20b-5662-4648-9947-9b615a8c630f"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User (Soft Delete)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{USER_URL}}/users/:id",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "6ff6b20b-5662-4648-9947-9b615a8c630f"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Hard Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{USER_URL}}/users/:id/hard",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"users",
+								":id",
+								"hard"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "6ff6b20b-5662-4648-9947-9b615a8c630f"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Validate User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\": \"testuser@example.com\", \"password\": \"password123\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{USER_URL}}/users/auth/validate",
+							"host": [
+								"{{USER_URL}}"
+							],
+							"path": [
+								"users",
+								"auth",
+								"validate"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,51 @@
+{
+	"id": "a4a0a497-8cf2-45ea-862d-d1bdba78ba10",
+	"values": [
+		{
+			"key": "API_GATEWAY_URL",
+			"value": "http://localhost:3000",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "USER_URL",
+			"value": "http://localhost:3001",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "POST_URL",
+			"value": "http://localhost:3002",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "FEED_URL",
+			"value": "http://localhost:3003",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "SOCIAL_GRAPH_URL",
+			"value": "http://localhost:3004",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "API",
+			"value": "api",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "JWT_CURRENT",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlMThjYmQwMi03ODVmLTQ1MzEtOTgyYS1lZTljYjgyNGMwMzMiLCJlbWFpbCI6ImZpbmFsQGV4YW1wbGUuY29tIiwidXNlcm5hbWUiOiJmaW5hbCIsImlhdCI6MTc0OTMyMDU0NSwiZXhwIjoxNzQ5NDA2OTQ1fQ.g_wdDhIrEKTqU1FRcHW4XTWAp8-f1qhwq-uGHxs67L4",
+			"type": "default",
+			"enabled": true
+		}
+	],
+	"name": "Globals",
+	"_postman_variable_scope": "globals",
+	"_postman_exported_at": "2025-06-24T21:01:23.691Z",
+	"_postman_exported_using": "Postman/11.50.1"
+}

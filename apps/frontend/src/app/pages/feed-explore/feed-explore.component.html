@@ -1,193 +1,195 @@
-<div class="user-discover-container">
-  <!-- Header -->
-  <div class="discover-header">
-    <h2>
-      <i class="icon-users"></i>
-      Discover Users
-    </h2>
-    <p class="discover-subtitle">Find and connect with interesting people</p>
-
-    <!-- Refresh Button -->
-    <button
-      class="refresh-btn"
-      (click)="refreshDiscovery()"
-      [disabled]="isLoading"
-      title="Refresh suggestions"
+<div class="max-w-6xl mx-auto p-5 bg-gray-50 min-h-screen">
+  <!-- Intestazione -->
+  <div
+    class="flex flex-col md:flex-row justify-between items-center mb-8 p-5 gap-4 md:gap-0"
+  >
+    <h2
+      class="flex items-center gap-2.5 m-0 text-gray-800 text-3xl font-semibold"
     >
-      <i class="icon-refresh" [class.spinning]="isLoading"></i>
-      Refresh
+      <i class="icon-grid"></i>
+      Scopri altri post su Nexus
+    </h2>
+
+    <!-- Pulsante Aggiorna -->
+    <button
+      class="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white border-none rounded-lg cursor-pointer font-medium transition-all duration-300 hover:bg-blue-600 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
+      (click)="refreshPosts()"
+      [disabled]="isLoading"
+      title="Aggiorna i post"
+    >
+      <i class="icon-refresh" [class]="{ 'animate-spin': isLoading }"></i>
+      Aggiorna
     </button>
   </div>
 
-  <!-- Search Bar -->
-  <div class="search-container">
-    <div class="search-input-wrapper">
-      <i class="icon-search"></i>
-      <input
-        type="text"
-        placeholder="Search users..."
-        class="search-input"
-        #searchInput
-        (input)="searchUsers(searchInput.value)"
-      />
-    </div>
+  <!-- Stato di Caricamento -->
+  <div *ngIf="isLoading" class="text-center py-15 px-5">
+    <div
+      class="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-5"
+    ></div>
+    <p>Caricamento post in corso...</p>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-container">
-    <div class="loading-spinner"></div>
-    <p>Finding awesome people for you...</p>
-  </div>
-
-  <!-- Error State -->
-  <div *ngIf="error && !isLoading" class="error-container">
+  <!-- Stato di Errore -->
+  <div *ngIf="error && !isLoading" class="text-center py-15 px-5 text-red-500">
     <i class="icon-alert"></i>
     <p>{{ error }}</p>
-    <button class="retry-btn" (click)="refreshDiscovery()">Try Again</button>
+    <button
+      class="px-5 py-2.5 bg-red-500 text-white border-none rounded-lg cursor-pointer mt-4 transition-colors duration-300 hover:bg-red-600"
+      (click)="refreshPosts()"
+    >
+      Riprova
+    </button>
   </div>
 
-  <!-- Users Grid -->
-  <div *ngIf="!isLoading && !error && users.length > 0" class="users-grid">
+  <!-- Griglia dei Post -->
+  <div
+    *ngIf="!isLoading && !error && posts.length > 0"
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8"
+  >
     <div
-      *ngFor="let user of users; trackBy: trackByUserId"
-      class="user-card"
-      [class.following]="user.isFollowing"
+      *ngFor="let post of posts; trackBy: trackByPostId"
+      class="overflow-hidden transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-xl"
     >
-      <!-- User Avatar -->
-      <div
-        class="user-avatar-container"
-        (click)="viewProfile(user)"
-        tabindex="0"
-        role="button"
-        [attr.aria-label]="'Visualizza profilo di ' + user.username"
-      >
-        <img
-          [src]="getAvatarUrl(user)"
-          [alt]="user.username + ' avatar'"
-          class="user-avatar"
-          loading="lazy"
-        />
-        <div class="avatar-overlay">
-          <i class="icon-eye"></i>
-        </div>
-      </div>
-
-      <!-- User Info -->
-      <div class="user-info">
-        <h3
-          class="user-name"
-          (click)="viewProfile(user)"
+      <!-- Intestazione Post -->
+      <div class="p-4 border-b border-gray-100">
+        <div
+          class="flex items-center gap-3 cursor-pointer transition-opacity duration-300 hover:opacity-80"
           tabindex="0"
           role="button"
-          [attr.aria-label]="'Visualizza profilo di ' + user.username"
+          (click)="viewProfile(post.userId)"
+          (keydown.enter)="viewProfile(post.userId)"
         >
-          {{ user.username }}
-        </h3>
-        <p class="user-username">&#64;{{ user.username }}</p>
+          <img
+            [src]="getUserAvatar()"
+            [alt]="post.username + ' avatar'"
+            class="w-10 h-10 rounded-full object-cover border-2 border-gray-100"
+            loading="lazy"
+          />
+          <div class="flex-1">
+            <h4 class="m-0 text-base font-semibold text-gray-800">
+              {{ post.username }}
+            </h4>
+            <span class="text-sm text-gray-500">{{
+              getFormattedDate(post.createdAt)
+            }}</span>
+          </div>
+        </div>
+      </div>
 
-        <p *ngIf="user.bio" class="user-bio">
-          {{ user.bio }}
+      <!-- Contenuto Post -->
+      <div
+        class="p-4"
+        tabindex="0"
+        role="button"
+        (click)="viewPost(post)"
+        (keydown.enter)="viewPost(post)"
+      >
+        <p class="m-0 mb-4 leading-relaxed text-gray-700 text-sm">
+          {{ post.content }}
         </p>
 
-        <!-- User Stats -->
-        <div class="user-stats">
-          <div class="stat">
-            <span class="stat-number">{{
-              formatCount(user.followersCount)
-            }}</span>
-            <span class="stat-label">Followers</span>
-          </div>
-          <div class="stat">
-            <span class="stat-number">{{
-              formatCount(user.followingCount)
-            }}</span>
-            <span class="stat-label">Following</span>
-          </div>
-          <div class="stat">
-            <span class="stat-number">{{ formatCount(user.postsCount) }}</span>
-            <span class="stat-label">Posts</span>
-          </div>
-        </div>
+        <!-- Immagine Post (se disponibile) -->
+        <!-- <div *ngIf="post.imageUrl" class="my-4 rounded-lg overflow-hidden">
+          <img
+            [src]="post.imageUrl"
+            [alt]="'Post di ' + post.author.username"
+            class="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
+            loading="lazy"
+          />
+        </div> -->
 
-        <!-- Common Tags (if available) -->
+        <!-- Tag del Post -->
         <div
-          *ngIf="user.commonTags && user.commonTags.length > 0"
-          class="common-tags"
+          *ngIf="post.tags && post.tags.length > 0"
+          class="flex flex-wrap gap-2 mt-4"
         >
-          <span class="common-tags-label">Common interests:</span>
-          <div class="tags">
-            <span *ngFor="let tag of user.commonTags.slice(0, 3)" class="tag">
-              {{ tag }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Mutual Follows -->
-        <div
-          *ngIf="user.mutualFollowsCount && user.mutualFollowsCount > 0"
-          class="mutual-follows"
-        >
-          <i class="icon-users"></i>
-          {{ user.mutualFollowsCount }} mutual connections
+          <span
+            *ngFor="let tag of post.tags.slice(0, 3)"
+            class="bg-gray-100 text-gray-600 px-2 py-1 rounded-xl text-xs font-medium"
+          >
+            #{{ tag }}
+          </span>
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="user-actions">
-        <button
-          class="view-profile-btn"
-          (click)="viewProfile(user)"
-          title="View Profile"
-        >
-          <i class="icon-user"></i>
-          Profile
-        </button>
-
-        <button
-          class="follow-btn"
-          [class.following]="user.isFollowing"
-          (click)="toggleFollow(user)"
-          [title]="user.isFollowing ? 'Unfollow' : 'Follow'"
-        >
-          <i
-            [class]="user.isFollowing ? 'icon-user-minus' : 'icon-user-plus'"
-          ></i>
-          {{ user.isFollowing ? 'Following' : 'Follow' }}
-        </button>
-      </div>
-
-      <!-- Activity Indicator -->
+      <!-- Statistiche Post -->
       <div
-        class="activity-indicator"
-        [title]="'Last active: ' + getFormattedDate(user.lastActiveAt)"
+        class="flex justify-around py-2.5 px-4 bg-gray-50 border-t border-b border-gray-100"
       >
-        <div
-          class="activity-dot"
-          [class.active]="isRecentlyActive(user.lastActiveAt)"
-        ></div>
+        <div class="flex items-center gap-1.5 text-gray-600 text-sm">
+          <i class="icon-heart"></i>
+          <span>{{ formatCount(post.likesCount) }}</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-gray-600 text-sm">
+          <i class="icon-message-circle"></i>
+          <span>{{ formatCount(post.commentsCount) }}</span>
+        </div>
+        <!-- <div class="flex items-center gap-1.5 text-gray-600 text-sm">
+          <i class="icon-share"></i>
+          <span>{{ formatCount(post.sharesCount) }}</span>
+        </div> -->
+      </div>
+
+      <!-- Azioni Post -->
+      <div class="flex justify-around py-2.5 px-4">
+        <button
+          class="flex items-center justify-center w-10 h-10 border-none rounded-full bg-transparent text-gray-600 cursor-pointer transition-all duration-300 hover:bg-gray-100 hover:scale-110"
+          [class]="{
+            'text-red-500': post.liked,
+            'hover:text-red-500 hover:bg-red-50': !post.liked
+          }"
+          (click)="toggleLike(post)"
+          title="Mi piace"
+        >
+          <i [class]="post.liked ? 'icon-heart-filled' : 'icon-heart'"></i>
+        </button>
+
+        <button
+          class="flex items-center justify-center w-10 h-10 border-none rounded-full bg-transparent text-gray-600 cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:scale-110 hover:text-blue-500"
+          (click)="viewPost(post)"
+          title="Commenta"
+        >
+          <i class="icon-message-circle"></i>
+        </button>
+
+        <button
+          class="flex items-center justify-center w-10 h-10 border-none rounded-full bg-transparent text-gray-600 cursor-pointer transition-all duration-300 hover:bg-green-50 hover:scale-110 hover:text-green-500"
+          (click)="sharePost(post)"
+          title="Condividi"
+        >
+          <i class="icon-share"></i>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Empty State -->
-  <div *ngIf="!isLoading && !error && users.length === 0" class="empty-state">
-    <i class="icon-users-large"></i>
-    <h3>No users found</h3>
-    <p>Try refreshing or adjusting your search criteria.</p>
-    <button class="refresh-btn" (click)="refreshDiscovery()">
+  <!-- Stato Vuoto -->
+  <div
+    *ngIf="!isLoading && !error && posts.length === 0"
+    class="text-center py-15 px-5 text-gray-600"
+  >
+    <i class="icon-grid-large text-6xl mb-5 opacity-50"></i>
+    <h3 class="m-0 mb-2.5 text-gray-800">Nessun post trovato</h3>
+    <p>Non ci sono post disponibili al momento.</p>
+    <button
+      class="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white border-none rounded-lg cursor-pointer font-medium transition-all duration-300 hover:bg-blue-600 hover:-translate-y-0.5 mx-auto mt-4"
+      (click)="refreshPosts()"
+    >
       <i class="icon-refresh"></i>
-      Refresh Suggestions
+      Aggiorna Post
     </button>
   </div>
 
-  <!-- Load More Button -->
-  <div
-    *ngIf="users.length > 0 && users.length >= filters.limit"
-    class="load-more-container"
-  >
-    <button class="load-more-btn" (click)="refreshDiscovery()">
-      <i class="icon-more"></i>
-      Discover More Users
+  <!-- Pulsante Carica Altri -->
+  <div *ngIf="posts.length > 0 && hasMorePosts" class="text-center mt-8">
+    <button
+      class="inline-flex items-center gap-2 px-8 py-3 bg-blue-500 text-white border-none rounded-full cursor-pointer font-medium transition-all duration-300 hover:bg-blue-600 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
+      (click)="loadMorePosts()"
+      [disabled]="isLoadingMore"
+    >
+      <i class="icon-more" [class]="{ 'animate-spin': isLoadingMore }"></i>
+      {{ isLoadingMore ? 'Caricamento...' : 'Carica Altri Post' }}
     </button>
   </div>
 </div>

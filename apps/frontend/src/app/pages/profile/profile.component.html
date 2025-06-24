@@ -45,9 +45,11 @@
       <app-posts-stats [postsCount]="userPosts.length"></app-posts-stats>
       <app-followers-stats
         [followersCount]="followers.length"
+        (followersClicked)="openFollowersModal()"
       ></app-followers-stats>
       <app-following-stats
         [followingCount]="following.length"
+        (followingClicked)="openFollowingModal()"
       ></app-following-stats>
     </div>
 
@@ -143,4 +145,20 @@
     <!-- Componente post list -->
     <app-post-list [posts]="userPosts" [isLoading]="isLoading"></app-post-list>
   </div>
+
+  <!-- Modali -->
+  <app-followers-modal
+    [isOpen]="showFollowersModal"
+    [userId]="user?.id || ''"
+    (closeModalEvent)="closeFollowersModal()"
+    (userSelected)="onFollowerSelected($event)"
+  ></app-followers-modal>
+
+  <app-following-modal
+    [isOpen]="showFollowingModal"
+    [userId]="user?.id || ''"
+    (closeModalEvent)="closeFollowingModal()"
+    (userSelected)="onFollowingSelected($event)"
+    (userUnfollowed)="onUserUnfollowed($event)"
+  ></app-following-modal>
 </div>

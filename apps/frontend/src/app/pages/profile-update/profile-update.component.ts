@@ -1,7 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
+import { AuthService } from '../../services/auth/auth.service';
+import { Router } from '@angular/router';
+import { ImageService } from '../../services/user/image.service';
+import { AvatarComponent } from '../../shared/components/user/avatar.component';
+import { CoverPhotoComponent } from '../../shared/components/user/cover-photo.component';
 
 export interface ProfileFormData {
   username: string;
@@ -27,7 +36,12 @@ export interface ProfileFormData {
 @Component({
   selector: 'app-profile-update',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    AvatarComponent,
+    CoverPhotoComponent,
+  ],
   templateUrl: './profile-update.component.html',
   styleUrls: ['./profile-update.component.css'],
 })
@@ -47,7 +61,12 @@ export class ProfileUpdateComponent implements OnInit {
     { value: 'GB', label: 'United Kingdom' },
   ];
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router,
+    private imageService: ImageService
+  ) {
     this.profileForm = this.createForm();
   }
 
@@ -77,28 +96,36 @@ export class ProfileUpdateComponent implements OnInit {
   }
 
   private loadCurrentProfile(): void {
-    // Qui caricheresti i dati attuali del profilo dal servizio
-    // Esempio di dati mockati:
-    const currentProfile = {
-      username: 'johndoe',
-      about: 'Sviluppatore full-stack appassionato di tecnologie innovative.',
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@example.com',
-      country: 'IT',
-      streetAddress: 'Via Roma 123',
-      city: 'Milano',
-      region: 'Lombardia',
-      postalCode: '20100',
+    const currentUser = this.authService.getCurrentUser();
+
+    if (!currentUser) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    this.profileForm.patchValue({
+      username: currentUser.username || 'Username non disponibile',
+      about: currentUser.bio || 'Biografia non disponibile',
+      firstName: currentUser.firstName || 'Nome non disponibile',
+      lastName: currentUser.lastName || 'Cognome non disponibile',
+      email: currentUser.email || 'eamil non disponibile',
+      country: 'Paese non disponibile',
+      streetAddress: 'Indirizzo non disponibile',
+      city: 'Città non disponibile',
+      region: 'Provincia non disponibile',
+      postalCode: 'CAP non disponibile',
       emailNotifications: {
         comments: true,
         candidates: false,
         offers: false,
       },
       pushNotifications: 'everything',
-    };
+    });
 
-    this.profileForm.patchValue(currentProfile);
+    this.photoPreview = this.imageService.getAvatarUrl(currentUser.avatar);
+    this.coverPhotoPreview = this.imageService.getCoverUrl(
+      currentUser.coverPhoto
+    );
   }
 
   onPhotoSelected(event: Event): void {
@@ -148,9 +175,8 @@ export class ProfileUpdateComponent implements OnInit {
   onSubmit(): void {
     if (this.profileForm.valid) {
       const formData = this.profileForm.value as ProfileFormData;
-      console.log('Dati del profilo da aggiornare:', formData);
+      console.log('Dati da inviare:', formData);
 
-      // Qui chiameresti il servizio per aggiornare il profilo
       this.updateProfile(formData);
     } else {
       this.markFormGroupTouched();
@@ -163,17 +189,15 @@ export class ProfileUpdateComponent implements OnInit {
     this.photoPreview = null;
     this.coverPhotoPreview = null;
   }
-
   private updateProfile(profileData: ProfileFormData): void {
-    // Implementa la chiamata al servizio per aggiornare il profilo
     // this.profileService.updateProfile(profileData).subscribe({
     //   next: (response) => {
     //     console.log('Profilo aggiornato con successo', response);
-    //     // Mostra messaggio di successo
+    //     this.router.navigate(['/profile']);
     //   },
     //   error: (error) => {
     //     console.error('Errore nell\'aggiornamento del profilo', error);
-    //     // Mostra messaggio di errore
+    //     // Gestisci l'errore
     //   }
     // });
   }
@@ -185,7 +209,6 @@ export class ProfileUpdateComponent implements OnInit {
     });
   }
 
-  // Getter per facilitare l'accesso ai controlli del form nel template
   get username() {
     return this.profileForm.get('username');
   }

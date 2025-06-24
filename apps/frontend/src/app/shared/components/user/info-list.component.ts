@@ -18,12 +18,28 @@ export interface Attachment {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div>
-      <div class="px-4 sm:px-0">
+    <div class="border-b border-gray-900/10 pb-6">
+      <div
+        class="flex justify-between items-center cursor-pointer"
+        (click)="toggle()"
+        (keydown.enter)="toggle()"
+        (keydown.space)="toggle()"
+        tabindex="0"
+        role="button"
+        [attr.aria-expanded]="isOpen ? 'true' : 'false'"
+      >
         <h3 class="text-base/7 font-semibold text-gray-900">{{ title }}</h3>
         <p class="mt-1 max-w-2xl text-sm/6 text-gray-500">{{ subtitle }}</p>
+        <svg
+          [class.rotate-180]="isOpen"
+          class="w-5 h-5 transition-transform duration-200 text-gray-500"
+          viewBox="0 0 24 24"
+        >
+          <path d="M19 9l-7 7-7-7"></path>
+        </svg>
       </div>
-      <div class="mt-6 border-t border-gray-100">
+
+      <div *ngIf="isOpen" class="mt-6 space-y-6 border-t border-gray-100">
         <dl class="divide-y divide-gray-100">
           <div
             *ngFor="let item of items"
@@ -33,7 +49,6 @@ export interface Attachment {
               {{ item.label }}
             </dt>
             <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-              <!-- Contenuto normale -->
               <span *ngIf="item.type !== 'attachments'">{{ item.value }}</span>
             </dd>
           </div>
@@ -47,4 +62,10 @@ export class InfoListComponent {
   @Input() title = '';
   @Input() subtitle = '';
   @Input() items: InfoItem[] = [];
+
+  isOpen = false;
+
+  toggle(): void {
+    this.isOpen = !this.isOpen;
+  }
 }

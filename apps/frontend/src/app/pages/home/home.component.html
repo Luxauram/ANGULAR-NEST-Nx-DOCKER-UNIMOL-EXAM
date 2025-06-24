@@ -1,44 +1,29 @@
 <div class="min-h-screen bg-gray-50">
   <!-- Main Content -->
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Debug Info (remove in production) -->
-    <div
-      class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
-      *ngIf="debugInfo"
-    >
-      <h3 class="text-sm font-medium text-yellow-800 mb-2">Debug Info:</h3>
-      <p class="text-sm text-yellow-700">
-        Following: {{ followingCount }} users
-      </p>
-      <p class="text-sm text-yellow-700">Feed posts: {{ feedPosts.length }}</p>
-      <button
-        (click)="testDifferentFeeds()"
-        class="mt-2 px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs hover:bg-yellow-300"
-      >
-        Test All Feed Types
-      </button>
-    </div>
-
     <!-- Feed Section -->
     <div class="space-y-6">
       <!-- Feed Header -->
       <div class="flex justify-between items-center">
         <div>
           <h2 class="text-2xl font-bold text-gray-900">
-            Il tuo Feed Personalizzato
+            Il Tuo Feed Personalizzato
           </h2>
           <p class="text-sm text-gray-500" *ngIf="followingCount > 0">
-            Following {{ followingCount }} users
+            Seguendo {{ followingCount }} utenti
+          </p>
+          <p class="text-sm text-gray-500" *ngIf="followingCount === 0">
+            Non stai seguendo nessuno
           </p>
         </div>
         <button
           (click)="refreshFeed()"
           [disabled]="isLoading"
-          class="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <svg
             *ngIf="isLoading"
-            class="animate-spin h-4 w-4"
+            class="animate-spin -ml-1 mr-2 h-4 w-4"
             fill="none"
             viewBox="0 0 24 24"
           >
@@ -58,7 +43,7 @@
           </svg>
           <svg
             *ngIf="!isLoading"
-            class="h-4 w-4"
+            class="-ml-1 mr-2 h-4 w-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -70,16 +55,55 @@
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
             ></path>
           </svg>
-          <span>{{ isLoading ? 'Refreshing...' : 'Refresh' }}</span>
+          <span>{{ isLoading ? 'Aggiornamento...' : 'Aggiorna' }}</span>
+        </button>
+        <button
+          (click)="debugFullFeedFlow()"
+          class="ml-2 px-4 py-2 bg-red-600 text-white rounded-md"
+        >
+          Debug Feed
+        </button>
+
+        <button
+          (click)="logDebugInfo()"
+          class="ml-2 px-4 py-2 bg-yellow-600 text-white rounded-md"
+        >
+          Log Debug
         </button>
       </div>
 
       <!-- Posts List -->
-      <div class="space-y-4">
+      <div class="space-y-4" *ngIf="!isLoading && feedPosts.length > 0">
         <app-post-list
           [posts]="feedPosts"
           [isLoading]="isLoading"
         ></app-post-list>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="flex justify-center py-12">
+        <div class="flex items-center space-x-2">
+          <svg
+            class="animate-spin h-6 w-6 text-indigo-600"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <span class="text-gray-500">Caricamento del tuo feed...</span>
+        </div>
       </div>
 
       <!-- Empty State -->
@@ -101,31 +125,60 @@
         <!-- Messaggio condizionale basato sui follow -->
         <div *ngIf="followingCount === 0; else hasFollowsTemplate">
           <h3 class="text-lg font-medium text-gray-900 mb-2">
-            Your feed is empty
+            Il tuo feed è vuoto
           </h3>
-          <p class="text-gray-500 mb-4">
-            Start following other users to see their posts in your personalized
-            feed!
+          <p class="text-gray-500 mb-6">
+            Inizia a seguire altri utenti per vedere i loro post nel tuo feed
+            personalizzato!
           </p>
-          <button class="btn-primary" routerLink="/social/discover">
-            Find Users to Follow
+          <button
+            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+            routerLink="/explore"
+          >
+            <svg
+              class="-ml-1 mr-3 h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
+            </svg>
+            <a routerLink="/user/search">Scopri Utenti da Seguire</a>
           </button>
         </div>
 
         <ng-template #hasFollowsTemplate>
           <h3 class="text-lg font-medium text-gray-900 mb-2">
-            No recent posts
+            Nessun post recente
           </h3>
-          <p class="text-gray-500 mb-4">
-            The users you follow haven't posted recently. Check back later or
-            discover more users!
+          <p class="text-gray-500 mb-6">
+            Gli utenti che segui non hanno pubblicato di recente. Riprova più
+            tardi o scopri nuovi utenti!
           </p>
-          <div class="space-x-4">
-            <button class="btn-primary" (click)="refreshFeed()">
-              Refresh Feed
-            </button>
-            <button class="btn-secondary" routerLink="/social/discover">
-              Discover More Users
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+              routerLink="/user/search"
+            >
+              <svg
+                class="-ml-1 mr-3 h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+              Scopri Altri Utenti
             </button>
           </div>
         </ng-template>

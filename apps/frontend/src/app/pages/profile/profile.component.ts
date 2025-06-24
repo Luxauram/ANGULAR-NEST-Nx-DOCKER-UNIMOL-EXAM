@@ -19,6 +19,14 @@ import { PostsStatsComponent } from '../../shared/components/user/posts-stats.co
 import { BadgeComponent } from '../../shared/components/user/badge.component';
 import { ShareProfileButtonComponent } from '../../shared/components/user/share-profile-button.component';
 import { EditProfileButtonComponent } from '../../shared/components/user/edit-profile-button.component';
+import {
+  FollowersModalComponent,
+  FollowerUser,
+} from '../../shared/components/user/followers-modal.component';
+import {
+  FollowingModalComponent,
+  FollowingUser,
+} from '../../shared/components/user/following-modal.component';
 
 @Component({
   selector: 'app-profile',
@@ -35,9 +43,10 @@ import { EditProfileButtonComponent } from '../../shared/components/user/edit-pr
     EditProfileButtonComponent,
     ShareProfileButtonComponent,
     PostListComponent,
+    FollowersModalComponent,
+    FollowingModalComponent,
   ],
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.css'],
 })
 export class ProfileComponent implements OnInit {
   user: User | null = null;
@@ -46,6 +55,9 @@ export class ProfileComponent implements OnInit {
   following: any[] = [];
   isLoading = false;
   applicantInfo: InfoItem[] = [];
+
+  showFollowersModal = false;
+  showFollowingModal = false;
 
   constructor(
     private authService: AuthService,
@@ -68,19 +80,12 @@ export class ProfileComponent implements OnInit {
       this.loadUserData();
     } else {
       console.log('❌ User è null/undefined');
-      // Redirect to login if no user
       this.router.navigate(['/login']);
     }
   }
 
-  // Update Info after reload
   private initializeApplicantInfo(): void {
     if (!this.user) return;
-
-    // Separa fullName in firstName e lastName se necessario
-    // const nameParts = this.user.fullName?.split(' ') || [];
-    // const firstName = nameParts[0] || '';
-    // const lastName = nameParts.slice(1).join(' ') || '';
 
     this.applicantInfo = [
       {
@@ -91,29 +96,37 @@ export class ProfileComponent implements OnInit {
         label: 'Cognome',
         value: this.user.lastName || 'Cognome non disponibile',
       },
-      // {
-      //   label: 'Nome Completo',
-      //   value: this.user.fullName || 'Nome completo non disponibile',
-      // },
+      {
+        label: 'Biografia',
+        value: this.user.bio || 'Biografia non disponibile',
+      },
       {
         label: 'Email',
         value: this.user.email || 'Email non disponibile',
       },
       {
-        label: 'Username',
-        value: this.user.username || 'Username non disponibile',
+        label: 'Data di Nascita',
+        value: 'Data di Nascita non disponibile',
       },
-      // {
-      //   label: 'Data di nascita',
-      //   value: this.user.dateOfBirth || '30/04/92', // Fallback se non disponibile
-      // },
-      // {
-      //   label: 'Città di nascita',
-      //   value: this.user.birthPlace || 'Termoli', // Fallback se non disponibile
-      // },
       {
-        label: 'Biografia',
-        value: this.user.bio || 'Biografia non disponibile',
+        label: 'Paese',
+        value: 'Paese non disponibile',
+      },
+      {
+        label: 'Indirizzo',
+        value: 'Indirizzo non disponibile',
+      },
+      {
+        label: 'Città',
+        value: 'Città non disponibile',
+      },
+      {
+        label: 'Provincia',
+        value: 'Provincia non disponibile',
+      },
+      {
+        label: 'CAP',
+        value: 'CAP non disponibile',
       },
     ];
 
@@ -126,7 +139,7 @@ export class ProfileComponent implements OnInit {
     console.log('🔄 Loading user data for user:', this.user.id);
     this.isLoading = true;
 
-    // Carica i post dell'utente
+    // Post utente
     this.postService.getUserPosts(this.user.id).subscribe({
       next: (posts) => {
         console.log('📝 Posts loaded:', posts);
@@ -137,22 +150,38 @@ export class ProfileComponent implements OnInit {
       },
     });
 
-    // Carica followers
-    this.socialService.getFollowers(this.user.id).subscribe({
-      next: (followers) => {
-        console.log('👥 Followers loaded:', followers);
-        this.followers = followers;
+    // Followers - aggiungi parametri di paginazione
+    this.socialService.getFollowers(this.user.id, 100, 0).subscribe({
+      next: (response) => {
+        console.log('👥 Followers loaded:', response);
+        // Gestisci sia response.data che response diretto
+        if (response && response.data) {
+          this.followers = response.data;
+        } else if (Array.isArray(response)) {
+          this.followers = response;
+        } else {
+          console.warn('⚠️ Unexpected followers response structure:', response);
+          this.followers = [];
+        }
       },
       error: (error) => {
         console.error('❌ Error loading followers:', error);
       },
     });
 
-    // Carica following
-    this.socialService.getFollowing(this.user.id).subscribe({
-      next: (following) => {
-        console.log('👤 Following loaded:', following);
-        this.following = following;
+    // Following - aggiungi parametri di paginazione
+    this.socialService.getFollowing(this.user.id, 100, 0).subscribe({
+      next: (response) => {
+        console.log('👤 Following loaded:', response);
+        // Gestisci sia response.data che response diretto
+        if (response && response.data) {
+          this.following = response.data;
+        } else if (Array.isArray(response)) {
+          this.following = response;
+        } else {
+          console.warn('⚠️ Unexpected following response structure:', response);
+          this.following = [];
+        }
         this.isLoading = false;
       },
       error: (error) => {
@@ -163,27 +192,13 @@ export class ProfileComponent implements OnInit {
   }
 
   refreshUserProfile(): void {
-    // Se hai un endpoint per recuperare i dati completi dell'utente
-    // Puoi implementare questo metodo per fare una chiamata API
     console.log('🔄 Refreshing user profile...');
-
-    // Esempio di implementazione (se hai un UserService):
-    // this.userService.getProfile(this.user!.id).subscribe({
-    //   next: (updatedUser) => {
-    //     this.user = updatedUser;
-    //     this.authService.setCurrentUser(updatedUser, this.authService.getToken()!);
-    //     this.initializeApplicantInfo();
-    //   },
-    //   error: (error) => console.error('Error refreshing profile:', error)
-    // });
   }
 
-  // Modifica Profilo
   handleEditProfile(): void {
     this.router.navigate(['/profile/update']);
   }
 
-  // Condividi Profilo
   handleShareProfile(): void {
     const shareData = {
       title: 'Il mio profilo',
@@ -225,5 +240,38 @@ export class ProfileComponent implements OnInit {
     };
 
     window.open(shareUrls.whatsapp, '_blank', 'width=600,height=400');
+  }
+
+  openFollowersModal(): void {
+    this.showFollowersModal = true;
+  }
+
+  closeFollowersModal(): void {
+    this.showFollowersModal = false;
+  }
+
+  openFollowingModal(): void {
+    this.showFollowingModal = true;
+  }
+
+  closeFollowingModal(): void {
+    this.showFollowingModal = false;
+  }
+
+  onFollowerSelected(follower: FollowerUser): void {
+    console.log('📱 Follower selected:', follower);
+    this.closeFollowersModal();
+    this.router.navigate(['/user', follower.username]);
+  }
+
+  onFollowingSelected(following: FollowingUser): void {
+    console.log('📱 Following selected:', following);
+    this.closeFollowingModal();
+    this.router.navigate(['/user', following.username]);
+  }
+
+  onUserUnfollowed(userId: string): void {
+    this.following = this.following.filter((user) => user.id !== userId);
+    console.log('👥 User unfollowed, updated following list');
   }
 }

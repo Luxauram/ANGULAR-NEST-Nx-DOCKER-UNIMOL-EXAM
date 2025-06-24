@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-inferrable-types */
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, map, catchError, throwError } from 'rxjs';
+import { Observable, forkJoin, of, throwError } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { Post, PostsResponse } from '../../models/post.model';
 import { AuthService } from '../auth/auth.service';
+import { SocialService } from '../user/social.service';
 import { environment } from '../../../environments/environment';
-import { Post } from '../../models/post.model';
 
 // Interfacce per le risposte del feed service
 export interface FeedItem {
@@ -48,12 +50,15 @@ export class FeedService {
     environment.apiGatewayUrl || environment.apiGatewayDocker;
   private readonly API_URL = `${this.BASE_URL}/api`;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+    private socialService: SocialService
+  ) {}
 
   private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     return new HttpHeaders({
-      'Content-Type': 'application/json',
       Authorization: token ? `Bearer ${token}` : '',
     });
   }
@@ -99,6 +104,86 @@ export class FeedService {
         }),
         catchError(this.handleError)
       );
+  }
+
+  /**
+   * Ottiene il feed personalizzato basato sugli utenti che segui
+   * Questo metodo dovrebbe essere usato nella home component
+   */
+  getFeedAsPosts(page: number = 1, limit: number = 20): Observable<Post[]> {
+    // Prima ottieni la lista degli utenti che segui
+    return this.socialService.getMyFollowing(1000, 0).pipe(
+      switchMap((followingResponse) => {
+        console.log('Following response:', followingResponse);
+
+        // Estrai gli ID degli utenti seguiti
+        let followedUserIds: string[] = [];
+
+        // Il SocialService potrebbe restituire { data: [...] } o direttamente [...]
+        if (
+          followingResponse &&
+          followingResponse.data &&
+          Array.isArray(followingResponse.data)
+        ) {
+          followedUserIds = followingResponse.data.map(
+            (user: any) => user.id || user.userId
+          );
+        } else if (followingResponse && Array.isArray(followingResponse)) {
+          followedUserIds = followingResponse.map(
+            (user: any) => user.id || user.userId
+          );
+        }
+
+        console.log('Followed user IDs:', followedUserIds);
+
+        // Se non segui nessuno, ritorna array vuoto
+        if (followedUserIds.length === 0) {
+          console.log('No users followed, returning empty feed');
+          return of([]);
+        }
+
+        // Ottieni i post di tutti gli utenti seguiti
+        const postRequests = followedUserIds.map(
+          (userId) => this.getPostsByUser(userId, 1, 50) // Ottieni più post per utente
+        );
+
+        return forkJoin(postRequests).pipe(
+          map((responses: PostsResponse[]) => {
+            // Combina tutti i post in un singolo array
+            const allPosts: Post[] = [];
+            responses.forEach((response) => {
+              // PostsResponse può avere { data: [...] } o essere direttamente [...]
+              if (response && response.posts && Array.isArray(response.posts)) {
+                allPosts.push(...response.posts);
+              } else if (response && Array.isArray(response)) {
+                allPosts.push(...response);
+              }
+            });
+
+            // Ordina i post per data (più recenti prima)
+            allPosts.sort((a, b) => {
+              const dateA = new Date(a.createdAt || 0);
+              const dateB = new Date(b.createdAt || 0);
+              return dateB.getTime() - dateA.getTime();
+            });
+
+            // Applica paginazione manuale
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+            const paginatedPosts = allPosts.slice(startIndex, endIndex);
+
+            console.log(
+              `Feed loaded: ${paginatedPosts.length} posts from ${followedUserIds.length} followed users`
+            );
+            return paginatedPosts;
+          })
+        );
+      }),
+      catchError((error) => {
+        console.error('Error loading personalized feed:', error);
+        return of([]); // Ritorna array vuoto in caso di errore
+      })
+    );
   }
 
   /**
@@ -281,10 +366,6 @@ export class FeedService {
   }
 
   /**
-   * Metodi di utilità per la gestione del feed
-   */
-
-  /**
    * Converte FeedItem in Post (per compatibilità con il resto dell'app)
    */
   convertFeedItemToPost(feedItem: FeedItem): Post {
@@ -312,45 +393,94 @@ export class FeedService {
   }
 
   /**
-   * Metodo wrapper che ritorna Post[] per compatibilità con il codice esistente
-   */
-  getFeedAsPosts(page: number = 1, limit: number = 10): Observable<Post[]> {
-    return this.getFeed(page, limit).pipe(
-      map((userFeed) => this.convertUserFeedToPosts(userFeed))
-    );
-  }
-
-  /**
-   * Metodo wrapper per timeline che ritorna Post[]
+   * Ottiene timeline posts (alias per getFeedAsPosts)
    */
   getTimelineAsPosts(page: number = 1, limit: number = 20): Observable<Post[]> {
-    return this.getTimeline(page, limit).pipe(
-      map((userFeed) => this.convertUserFeedToPosts(userFeed))
-    );
+    return this.getFeedAsPosts(page, limit);
   }
 
   /**
-   * Metodo wrapper per trending che ritorna Post[]
+   * Ottiene post trending (se implementato nel backend)
    */
-  getTrendingAsPosts(
-    limit: number = 10,
-    timeframe: string = '24h'
-  ): Observable<Post[]> {
-    return this.getTrendingPosts(limit, timeframe).pipe(
-      map((trending) =>
-        trending.items.map((item) => this.convertFeedItemToPost(item))
-      )
-    );
+  getTrendingAsPosts(limit: number = 10): Observable<Post[]> {
+    let params = new HttpParams();
+    params = params.set('limit', limit.toString());
+
+    return this.http
+      .get<PostsResponse>(`${this.API_URL}/posts/trending`, {
+        headers: this.getHeaders(),
+        params,
+      })
+      .pipe(
+        map((response) => {
+          // PostsResponse potrebbe essere { data: [...] } o direttamente [...]
+          if (response && response.posts && Array.isArray(response.posts)) {
+            return response.posts;
+          } else if (Array.isArray(response)) {
+            return response as Post[];
+          }
+          return [];
+        }),
+        catchError((error) => {
+          console.error('Error loading trending posts:', error);
+          return of([]);
+        })
+      );
   }
 
   /**
-   * Metodo wrapper per recent che ritorna Post[]
+   * Ottiene tutti i post recenti (per explore)
    */
   getRecentAsPosts(page: number = 1, limit: number = 20): Observable<Post[]> {
-    return this.getRecentPosts(page, limit).pipe(
-      map((recent) =>
-        recent.items.map((item) => this.convertFeedItemToPost(item))
-      )
-    );
+    let params = new HttpParams();
+    params = params.set('page', page.toString());
+    params = params.set('limit', limit.toString());
+
+    return this.http
+      .get<PostsResponse>(`${this.API_URL}/posts`, {
+        headers: this.getHeaders(),
+        params,
+      })
+      .pipe(
+        map((response) => {
+          // PostsResponse potrebbe essere { data: [...] } o direttamente [...]
+          if (response && response.posts && Array.isArray(response.posts)) {
+            return response.posts;
+          } else if (Array.isArray(response)) {
+            return response as Post[];
+          }
+          return [];
+        }),
+        catchError((error) => {
+          console.error('Error loading recent posts:', error);
+          return of([]);
+        })
+      );
+  }
+
+  /**
+   * Ottiene i post di un utente specifico
+   */
+  private getPostsByUser(
+    userId: string,
+    page: number = 1,
+    limit: number = 20
+  ): Observable<PostsResponse> {
+    let params = new HttpParams();
+    params = params.set('page', page.toString());
+    params = params.set('limit', limit.toString());
+
+    return this.http
+      .get<PostsResponse>(`${this.API_URL}/posts/user/${userId}`, {
+        headers: this.getHeaders(),
+        params,
+      })
+      .pipe(
+        catchError((error) => {
+          console.error(`Error loading posts for user ${userId}:`, error);
+          // Ritorna un array vuoto per questo utente invece di lanciare l'errore
+          return of([] as any);
+        })
+      );
   }
 }
