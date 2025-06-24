@@ -6,7 +6,7 @@ import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.com
 import { UserSearchComponent } from './features/users/components/user-search/user-search.component';
 import { ProfileUpdateComponent } from './pages/profile-update/profile-update.component';
 import { AboutComponent } from './pages/about/about.component';
-import { UserDiscoverComponent } from './features/users/components/user-discover/user-discover.component';
+import { FeedExploreComponent } from './pages/feed-explore/feed-explore.component';
 import { AuthGuard } from './guards/auth.guard';
 import { GuestGuard } from './guards/guest.guard';
 import { RootRedirectGuard } from './guards/root-redirect.guard';
@@ -43,13 +43,13 @@ export const appRoutes: Routes = [
     canActivate: [AuthGuard],
   },
   {
-    path: 'search',
+    path: 'user/search',
     component: UserSearchComponent,
     canActivate: [AuthGuard],
   },
   {
     path: 'feed/explore',
-    component: UserDiscoverComponent,
+    component: FeedExploreComponent,
     canActivate: [AuthGuard],
   },
   {

@@ -37,13 +37,35 @@ export class RegisterComponent {
     });
   }
 
+  // Funzione per capitalizzare la prima lettera
+  private capitalizeFirstLetter(str: string): string {
+    if (!str) return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  }
+
+  // Funzione per trasformare il testo prima dell'invio
+  private transformFormData(formData: any): any {
+    return {
+      ...formData,
+      username: formData.username.toLowerCase(),
+      email: formData.email.toLowerCase(),
+      firstName: this.capitalizeFirstLetter(formData.firstName),
+      lastName: this.capitalizeFirstLetter(formData.lastName),
+      // bio rimane invariata
+      bio: formData.bio,
+    };
+  }
+
   onSubmit(): void {
     if (this.registerForm.valid) {
       this.isLoading = true;
       this.errorMessage = '';
       this.successMessage = '';
 
-      this.authService.register(this.registerForm.value).subscribe({
+      // Trasforma i dati prima di inviarli
+      const transformedData = this.transformFormData(this.registerForm.value);
+
+      this.authService.register(transformedData).subscribe({
         next: (response) => {
           this.successMessage = 'Account created successfully!';
 

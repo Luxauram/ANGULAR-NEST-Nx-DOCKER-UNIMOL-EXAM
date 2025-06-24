@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { FollowDto } from '../../../../models/social.model';
-import { User } from '../../../../models/user.model';
-import { AuthService } from '../../../../services/auth/auth.service';
-import { SocialService } from '../../../../services/user/social.service';
-import { UserService } from '../../../../services/user/user.service';
+import { FollowDto } from '../../models/social.model';
+import { User } from '../../models/user.model';
+import { AuthService } from '../../services/auth/auth.service';
+import { SocialService } from '../../services/user/social.service';
+import { UserService } from '../../services/user/user.service';
 
 export interface DiscoverUser {
   id: string;
@@ -24,13 +24,13 @@ export interface DiscoverUser {
 }
 
 @Component({
-  selector: 'app-user-discover',
+  selector: 'app-feed-explore',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './user-discover.component.html',
-  styleUrls: ['./user-discover.component.css'],
+  templateUrl: './feed-explore.component.html',
+  styleUrls: ['./feed-explore.component.css'],
 })
-export class UserDiscoverComponent implements OnInit {
+export class FeedExploreComponent implements OnInit {
   users: DiscoverUser[] = [];
   isLoading = false;
   error: string | null = null;

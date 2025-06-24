@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Importa gli stili di ngx-toastr */
+@import 'ngx-toastr/toastr';
+
+/* Personalizzazioni opzionali per i toast */
+.toast-info {
+  background-color: #3b82f6;
+}
+
+.toast-success {
+  background-color: #10b981;
+}
+
+.toast-warning {
+  background-color: #f59e0b;
+}
+
+.toast-error {
+  background-color: #ef4444;
+}
+
+/* Stili esistenti per gli errori dei form */
+.error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.success {
+  color: #10b981;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
 /* Reset and Base Styles */
 * {
   margin: 0;

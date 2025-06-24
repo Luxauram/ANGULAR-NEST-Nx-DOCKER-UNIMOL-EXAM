@@ -9,12 +9,14 @@
         <button
           type="button"
           (click)="toggleMobileMenu()"
+          (keydown.enter)="toggleMobileMenu()"
+          (keydown.space)="toggleMobileMenu(); $event.preventDefault()"
           class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:outline-hidden focus:ring-inset"
           aria-controls="mobile-menu"
           [attr.aria-expanded]="mobileMenuOpen"
         >
           <span class="absolute -inset-0.5"></span>
-          <span class="sr-only">Open main menu</span>
+          <span class="sr-only">Apri menu</span>
           <!-- Icona quando menu è chiuso -->
           <svg
             [class]="mobileMenuOpen ? 'hidden size-6' : 'block size-6'"
@@ -48,19 +50,40 @@
         </button>
       </div>
 
-      <!-- Logo e Navigation Links -->
+      <!-- Logo Section - Layout diverso per Desktop vs Mobile -->
+      <!-- Mobile: Logo al centro sempre -->
       <div
-        class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start"
+        class="absolute inset-0 flex items-center justify-center pointer-events-none sm:hidden"
       >
-        <!-- Logo -->
-        <div class="flex shrink-0 items-center">
-          <a routerLink="/home" class="text-xl font-bold text-white">
-            SocialGAY
-          </a>
+        <div
+          class="flex shrink-0 items-center space-x-2 pointer-events-auto px-4"
+        >
+          <!-- Logo Nexus -->
+          <img src="/nexus_logo.png" alt="Nexus Logo" class="h-6 w-auto" />
+          <!-- Titolo -->
+          <a routerLink="/home" class="text-lg font-bold text-white"> Nexus </a>
+          <!-- Logo Unimol -->
+          <img src="/unimol_logo.png" alt="Unimol Logo" class="h-6 w-auto" />
+        </div>
+      </div>
+
+      <!-- Desktop Layout -->
+      <div class="hidden sm:flex sm:items-center sm:w-full">
+        <!-- Logo a sinistra quando utente loggato, al centro quando non loggato -->
+        <div
+          class="flex shrink-0 items-center space-x-4"
+          [class.mx-auto]="!currentUser"
+        >
+          <!-- Logo Nexus -->
+          <img src="/nexus_logo.png" alt="Nexus Logo" class="h-8 w-auto" />
+          <!-- Titolo -->
+          <a routerLink="/home" class="text-xl font-bold text-white"> Nexus </a>
+          <!-- Logo Unimol -->
+          <img src="/unimol_logo.png" alt="Unimol Logo" class="h-8 w-auto" />
         </div>
 
-        <!-- Navigation Links (solo se utente loggato) -->
-        <div class="hidden sm:ml-6 sm:block" *ngIf="currentUser">
+        <!-- Navigation Links al centro (solo se utente loggato) -->
+        <div class="flex-1 flex justify-center" *ngIf="currentUser">
           <div class="flex space-x-4">
             <a
               routerLink="/home"
@@ -79,7 +102,7 @@
               Crea Post
             </a>
             <a
-              routerLink="/search"
+              routerLink="user/search"
               routerLinkActive="bg-gray-900 text-white"
               [routerLinkActiveOptions]="{ exact: false }"
               class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
@@ -92,7 +115,7 @@
               [routerLinkActiveOptions]="{ exact: false }"
               class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
             >
-              Scopri
+              Esplora
             </a>
             <a
               routerLink="/about"
@@ -100,42 +123,33 @@
               [routerLinkActiveOptions]="{ exact: false }"
               class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
             >
-              About
+              Chi Siamo
             </a>
           </div>
         </div>
+
+        <!-- Spazio vuoto per bilanciare il layout quando utente loggato -->
+        <div *ngIf="currentUser" class="flex shrink-0 w-[200px]"></div>
       </div>
 
-      <!-- User Menu Area -->
+      <!-- User Menu Area a destra -->
       <div
         class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0"
       >
-        <!-- Se utente NON loggato: Login/Register -->
-        <div *ngIf="!currentUser" class="flex items-center space-x-2">
-          <a
-            routerLink="/login"
-            class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-          >
-            Accedi
-          </a>
-          <a
-            routerLink="/register"
-            class="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Registrati
-          </a>
-        </div>
-
         <!-- Se utente loggato: Notifiche + Profile dropdown -->
         <ng-container *ngIf="currentUser">
           <!-- Notification button -->
           <button
             type="button"
             (click)="toggleNotificationDrawer()"
+            (keydown.enter)="toggleNotificationDrawer()"
+            (keydown.space)="
+              toggleNotificationDrawer(); $event.preventDefault()
+            "
             class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
           >
             <span class="absolute -inset-1.5"></span>
-            <span class="sr-only">View notifications</span>
+            <span class="sr-only">Vedi notifiche</span>
             <svg
               class="size-6"
               fill="none"
@@ -165,13 +179,15 @@
               <button
                 type="button"
                 (click)="toggleProfileMenu()"
+                (keydown.enter)="toggleProfileMenu()"
+                (keydown.space)="toggleProfileMenu(); $event.preventDefault()"
                 class="relative flex rounded-full bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
                 id="user-menu-button"
                 [attr.aria-expanded]="profileMenuOpen"
                 aria-haspopup="true"
               >
                 <span class="absolute -inset-1.5"></span>
-                <span class="sr-only">Open user menu</span>
+                <span class="sr-only">Apri menu utente</span>
                 <img
                   [src]="getUserAvatar()"
                   [alt]="currentUser.username"
@@ -208,6 +224,8 @@
               </a>
               <button
                 (click)="logout()"
+                (keydown.enter)="logout()"
+                (keydown.space)="logout(); $event.preventDefault()"
                 class="w-full text-left block rounded-md px-3 py-2 text-base font-medium text-red-400 hover:bg-gray-700 hover:text-red-300"
               >
                 Logout
@@ -241,7 +259,7 @@
         Crea Post
       </a>
       <a
-        routerLink="/search"
+        routerLink="user/search"
         (click)="closeMobileMenu()"
         routerLinkActive="bg-gray-900 text-white"
         [routerLinkActiveOptions]="{ exact: false }"
@@ -256,7 +274,7 @@
         [routerLinkActiveOptions]="{ exact: false }"
         class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
       >
-        Scopri
+        Esplora
       </a>
       <a
         routerLink="/about"
@@ -265,7 +283,7 @@
         [routerLinkActiveOptions]="{ exact: false }"
         class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
       >
-        About
+        Chi Siamo
       </a>
     </div>
   </div>
@@ -285,6 +303,9 @@
       [class.opacity-0]="drawerAnimating"
       [class.opacity-100]="!drawerAnimating"
       (click)="onBackdropClick($event)"
+      (keydown.enter)="onBackdropClick($event)"
+      (keydown.space)="onBackdropClick($event); $event.preventDefault()"
+      tabindex="0"
       aria-hidden="true"
     ></div>
 
@@ -317,6 +338,10 @@
                   <button
                     type="button"
                     (click)="closeNotificationDrawer()"
+                    (keydown.enter)="closeNotificationDrawer()"
+                    (keydown.space)="
+                      closeNotificationDrawer(); $event.preventDefault()
+                    "
                     class="rounded-md p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <span class="sr-only">Chiudi</span>
@@ -347,9 +372,22 @@
                 >
                   <div
                     *ngFor="let notification of notifications"
-                    class="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                    (click)="showNotImplementedToast()"
+                    (keydown.enter)="showNotImplementedToast()"
+                    (keydown.space)="
+                      showNotImplementedToast(); $event.preventDefault()
+                    "
+                    tabindex="0"
+                    class="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                     [class.bg-blue-50]="!notification.read"
                     [class.border-blue-200]="!notification.read"
+                    role="button"
+                    [attr.aria-label]="
+                      'Notifica: ' +
+                      notification.title +
+                      '. ' +
+                      notification.message
+                    "
                   >
                     <!-- Icona notifica -->
                     <div class="flex-shrink-0">
@@ -430,7 +468,9 @@
               >
                 <button
                   (click)="markAllAsRead()"
-                  class="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium py-2 px-4 rounded-md hover:bg-blue-50 transition-colors"
+                  (keydown.enter)="markAllAsRead()"
+                  (keydown.space)="markAllAsRead(); $event.preventDefault()"
+                  class="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium py-2 px-4 rounded-md hover:bg-blue-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Segna tutte come lette
                 </button>

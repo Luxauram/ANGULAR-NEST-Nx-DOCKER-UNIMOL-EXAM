@@ -1,137 +1,208 @@
-<div class="auth-container">
-  <div class="auth-card">
-    <h2>Register</h2>
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-      <div class="form-group">
-        <label for="username">Username:</label>
-        <input
-          type="text"
-          id="username"
-          formControlName="username"
-          placeholder="Choose a username"
-        />
-        <div
-          class="error"
-          *ngIf="
-            registerForm.get('username')?.touched &&
-            registerForm.get('username')?.errors
-          "
-        >
-          Username is required
+<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+    <div class="flex min-h-full flex-row justify-center px-6 py-8 lg:px-8">
+      <img class="mx-auto h-28 w-auto" src="/nexus_logo.png" alt="Nexus Logo" />
+      <img
+        class="mx-auto h-28 w-auto"
+        src="/unimol_logo.png"
+        alt="Unimol Logo"
+      />
+    </div>
+    <h2
+      class="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900"
+    >
+      Crea il tuo account
+    </h2>
+  </div>
+
+  <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+    <form
+      [formGroup]="registerForm"
+      (ngSubmit)="onSubmit()"
+      class="space-y-6"
+      action="#"
+      method="POST"
+    >
+      <div>
+        <label for="username" class="block text-sm/6 font-medium text-gray-900">
+          Nome utente
+        </label>
+        <div class="mt-2">
+          <input
+            type="text"
+            id="username"
+            formControlName="username"
+            placeholder="salerno_is_my_life_67"
+            required
+            class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+          />
+          <div
+            class="error"
+            *ngIf="
+              registerForm.get('username')?.touched &&
+              registerForm.get('username')?.errors
+            "
+          >
+            Nome utente richiesto
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="email">Email:</label>
-        <input
-          type="email"
-          id="email"
-          formControlName="email"
-          placeholder="Enter your email"
-        />
-        <div
-          class="error"
-          *ngIf="
-            registerForm.get('email')?.touched &&
-            registerForm.get('email')?.errors
-          "
-        >
-          <span *ngIf="registerForm.get('email')?.errors?.['required']">
-            Email is required
-          </span>
-          <span *ngIf="registerForm.get('email')?.errors?.['email']">
-            Please enter a valid email
-          </span>
+      <div>
+        <label for="email" class="block text-sm/6 font-medium text-gray-900">
+          Indirizzo email
+        </label>
+        <div class="mt-2">
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="rocco@unimol.it"
+            autocomplete="email"
+            required
+            class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+          />
+          <div
+            class="error"
+            *ngIf="
+              registerForm.get('email')?.touched &&
+              registerForm.get('email')?.errors
+            "
+          >
+            <span *ngIf="registerForm.get('email')?.errors?.['required']">
+              Email richiesta
+            </span>
+            <span *ngIf="registerForm.get('email')?.errors?.['email']">
+              Inserire un'email valida
+            </span>
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="firstName">First Name:</label>
-        <input
-          type="text"
-          id="firstName"
-          formControlName="firstName"
-          placeholder="Your first name"
-        />
-        <div
-          class="error"
-          *ngIf="
-            registerForm.get('firstName')?.touched &&
-            registerForm.get('firstName')?.errors
-          "
+      <div>
+        <label
+          for="firstName"
+          class="block text-sm/6 font-medium text-gray-900"
         >
-          First name is required
+          Nome
+        </label>
+        <div class="mt-2">
+          <input
+            type="text"
+            id="firstName"
+            formControlName="firstName"
+            placeholder="Francesco"
+            required
+            class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+          />
+          <div
+            class="error"
+            *ngIf="
+              registerForm.get('firstName')?.touched &&
+              registerForm.get('firstName')?.errors
+            "
+          >
+            Nome richiesto
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="lastName">Last Name:</label>
-        <input
-          type="text"
-          id="lastName"
-          formControlName="lastName"
-          placeholder="Your last name"
-        />
-        <div
-          class="error"
-          *ngIf="
-            registerForm.get('lastName')?.touched &&
-            registerForm.get('lastName')?.errors
-          "
-        >
-          Last name is required
+      <div>
+        <label for="lastName" class="block text-sm/6 font-medium text-gray-900">
+          Cognome
+        </label>
+        <div class="mt-2">
+          <input
+            type="text"
+            id="lastName"
+            formControlName="lastName"
+            placeholder="Salerno"
+            required
+            class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+          />
+          <div
+            class="error"
+            *ngIf="
+              registerForm.get('lastName')?.touched &&
+              registerForm.get('lastName')?.errors
+            "
+          >
+            Cognome richiesto
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="password">Password:</label>
-        <input
-          type="password"
-          id="password"
-          formControlName="password"
-          placeholder="Choose a password (min 6 characters)"
-        />
-        <div
-          class="error"
-          *ngIf="
-            registerForm.get('password')?.touched &&
-            registerForm.get('password')?.errors
-          "
-        >
-          <span *ngIf="registerForm.get('password')?.errors?.['required']">
-            Password is required
-          </span>
-          <span *ngIf="registerForm.get('password')?.errors?.['minlength']">
-            Password must be at least 6 characters long
-          </span>
+      <div>
+        <label for="password" class="block text-sm/6 font-medium text-gray-900">
+          Password
+        </label>
+        <div class="mt-2">
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            placeholder="almeno 6 caratteri"
+            required
+            class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+          />
+          <div
+            class="error"
+            *ngIf="
+              registerForm.get('password')?.touched &&
+              registerForm.get('password')?.errors
+            "
+          >
+            <span *ngIf="registerForm.get('password')?.errors?.['required']">
+              Password richiesta
+            </span>
+            <span *ngIf="registerForm.get('password')?.errors?.['minlength']">
+              La password deve essere di almeno 6 caratteri
+            </span>
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="bio">Bio (optional):</label>
-        <textarea
-          id="bio"
-          formControlName="bio"
-          placeholder="Tell us something about yourself..."
-          rows="3"
-        ></textarea>
+      <div>
+        <label for="bio" class="block text-sm/6 font-medium text-gray-900">
+          Biografia (opzionale)
+        </label>
+        <div class="mt-2">
+          <textarea
+            id="bio"
+            formControlName="bio"
+            placeholder="Questa è la maxi storia di come la mia vita è cambiata..."
+            rows="3"
+            class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+          ></textarea>
+        </div>
       </div>
 
-      <button type="submit" [disabled]="registerForm.invalid || isLoading">
-        {{ isLoading ? 'Creating account...' : 'Register' }}
-      </button>
+      <div>
+        <button
+          type="submit"
+          [disabled]="registerForm.invalid || isLoading"
+          class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+        >
+          {{ isLoading ? 'Creazione account...' : 'Registrati' }}
+        </button>
 
-      <div class="error" *ngIf="errorMessage">
-        {{ errorMessage }}
-      </div>
+        <div class="error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
 
-      <div class="success" *ngIf="successMessage">
-        {{ successMessage }}
+        <div class="success" *ngIf="successMessage">
+          {{ successMessage }}
+        </div>
       </div>
     </form>
 
-    <p class="auth-link">
-      Already have an account? <a routerLink="/login">Login here</a>
+    <p class="mt-10 text-center text-sm/6 text-gray-500">
+      Hai già un account?
+      <a
+        routerLink="/login"
+        class="font-semibold text-indigo-600 hover:text-indigo-500"
+        >Accedi</a
+      >
     </p>
   </div>
 </div>

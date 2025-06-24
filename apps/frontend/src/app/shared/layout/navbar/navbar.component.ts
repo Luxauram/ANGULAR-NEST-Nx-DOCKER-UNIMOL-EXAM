@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { ImageService } from '../../../services/user/image.service';
 import { User } from '../../../models/user.model';
 import { UserService } from '../../../services/user/user.service';
+import { ToastrService } from 'ngx-toastr';
 
 // da inserire altrove
 interface Notification {
@@ -39,7 +40,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private userService: UserService,
-    private imageService: ImageService
+    private imageService: ImageService,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit() {
@@ -91,7 +93,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   onBackdropClick(event: Event) {
-    // Chiude il drawer quando si clicca sul backdrop (parte grigia)
     this.closeNotificationDrawer();
   }
 
@@ -108,7 +109,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.drawerVisible = true;
     this.drawerAnimating = true;
 
-    // Forza il reflow per assicurarsi che le classi iniziali siano applicate
     setTimeout(() => {
       this.drawerAnimating = false;
     }, 10);
@@ -132,11 +132,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private toggleBodyScroll() {
     if (this.notificationDrawerOpen) {
       document.body.classList.add('drawer-open');
-      // Previene lo scroll della pagina sottostante
       document.body.style.overflow = 'hidden';
     } else {
       document.body.classList.remove('drawer-open');
-      // Ripristina lo scroll della pagina
       document.body.style.overflow = '';
     }
   }
@@ -146,7 +144,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
       notification.read = true;
     });
     this.unreadNotifications = 0;
-    // @TODO: chiamate API
+  }
+
+  showNotImplementedToast() {
+    this.toastr.info(
+      'Questa funzionalità non è ancora stata implementata',
+      'Feature non implementata',
+      {
+        timeOut: 4000,
+        progressBar: true,
+        closeButton: true,
+      }
+    );
   }
 
   // @TODO: chiamate API
@@ -156,7 +165,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       {
         id: 1,
         title: 'Nuovo messaggio',
-        message: 'Hai ricevuto un nuovo messaggio da Mario',
+        message: 'Hai ricevuto un nuovo messaggio da Mario N.',
         createdAt: new Date(),
         read: false,
       },
@@ -165,7 +174,29 @@ export class NavbarComponent implements OnInit, OnDestroy {
         title: 'Like al tuo post',
         message: 'A qualcuno piace il tuo ultimo post',
         createdAt: new Date(Date.now() - 3600000),
-        read: true,
+        read: false,
+      },
+      {
+        id: 3,
+        title: 'Nuova Attività',
+        message: 'Francesco S. ti ha invitato al concerto dei Linkin Park',
+        createdAt: new Date(Date.now() - 3600000),
+        read: false,
+      },
+      {
+        id: 4,
+        title: 'Segnalazione',
+        message:
+          'Simone S. ha segnalato il tuo post per il contenuto migliore rispetto allo studente modello',
+        createdAt: new Date(Date.now() - 3600000),
+        read: false,
+      },
+      {
+        id: 5,
+        title: 'Nuovo messaggio',
+        message: 'Hai ricevuto una nuova denuncia da Rocco O.',
+        createdAt: new Date(),
+        read: false,
       },
     ];
 
