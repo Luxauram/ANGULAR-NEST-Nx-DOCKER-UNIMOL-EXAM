@@ -17,6 +17,7 @@ import { ImageService } from '../../services/user/image.service';
 export class FeedExploreComponent implements OnInit {
   user: User | null = null;
   posts: Post[] = [];
+  selectedPost: Post | null = null;
   isLoading = false;
   isLoadingMore = false;
   error: string | null = null;
@@ -89,7 +90,7 @@ export class FeedExploreComponent implements OnInit {
         },
         error: (error) => {
           console.error('❌ Error loading more posts:', error);
-          this.currentPage--; // Revert page increment on error
+          this.currentPage--;
           this.isLoadingMore = false;
         },
       });
@@ -100,7 +101,26 @@ export class FeedExploreComponent implements OnInit {
    */
   refreshPosts(): void {
     this.posts = [];
+    this.selectedPost = null;
     this.loadAllPosts();
+  }
+
+  /**
+   * Apre la modale con i dettagli del post
+   */
+  openPostModal(post: Post): void {
+    this.selectedPost = post;
+    // Previeni lo scroll del body quando la modale è aperta
+    document.body.style.overflow = 'hidden';
+  }
+
+  /**
+   * Chiude la modale
+   */
+  closePostModal(): void {
+    this.selectedPost = null;
+    // Ripristina lo scroll del body
+    document.body.style.overflow = 'auto';
   }
 
   /**
@@ -150,6 +170,7 @@ export class FeedExploreComponent implements OnInit {
    * Naviga ai dettagli del post
    */
   viewPost(post: Post): void {
+    this.closePostModal();
     this.router.navigate(['/posts', post.id]);
   }
 
@@ -161,6 +182,7 @@ export class FeedExploreComponent implements OnInit {
       console.error('User ID not available');
       return;
     }
+    this.closePostModal();
     this.router.navigate(['/user/', userId]);
   }
 
