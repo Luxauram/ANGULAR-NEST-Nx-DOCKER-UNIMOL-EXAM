@@ -85,14 +85,7 @@ docker compose up --build -d
 docker exec -it user-service sh
 
 # Una volta dentro eseguire la migrazione per Prisma (va fatto solo la prima volta)
-npx prisma migrate dev
-```
-
-### Setup Database
-
-```bash
-# Migrazioni Prisma nel container
-docker exec -it social-network-db-project-user-service-1 npx prisma migrate dev --name init
+npx prisma migrate dev --name init
 ```
 
 ### Sviluppo Locale
