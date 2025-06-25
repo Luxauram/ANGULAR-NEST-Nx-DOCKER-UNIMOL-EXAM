@@ -6,8 +6,8 @@
 
 ## Team di Sviluppo
 
-- **Luca D'Aurizio** - [GitHub Link]()
-- **Luca Lanese** - [GitHub Link]()
+- **Luca D'Aurizio** - [GitHub Link](https://github.com/Luxauram)
+- **Luca Lanese** - [GitHub Link](https://github.com/lucalanese)
 
 ## Descrizione del Progetto
 
@@ -114,8 +114,7 @@ social-network-db-project/
 │   ├── social-graph-service/ # Grafo sociale con Neo4j
 │   └── user-service/         # Gestione utenti con PostgreSQL
 ├── docker-compose.yml        # Orchestrazione servizi
-├── libs/                     # Librerie condivise
-└── tools/                    # Strumenti di build
+└── docs/                     # Documenti del progetto
 ```
 
 ## 🔧 Comandi Utili
@@ -245,12 +244,25 @@ netstat -tulpn | grep :3000
 
 ## Documentazione Completa
 
-La documentazione completa del progetto è [presente qui](./project-presentation.pdf), oppure si può convertire dal file md [presenti qui](./project-presentation.md) in questo modo:
+La documentazione completa del progetto è [presente qui](./docs/project-presentation.pdf), oppure si può convertire dal file md [presenti qui](./docs/project-presentation.md) in questo modo:
 
 ```bash
 # Richiede pandoc e xelatex installati
 pandoc project-presentation.md -o project-presentation.pdf --pdf-engine=xelatex
 ```
+
+## Business Logic Testing (Postman)
+
+Una volta che l'applicativo sarà in esecuzione, si potrà testare con Postman:
+
+1.  **[Cliccando Qui](./docs/DB_Exam.postman_collection.json)** sarà possibile arrivare al file json con tutte le API già pronte per essere testate, ma occorrerà anche **[cliccare qui](./docs/workspace.postman_globals.json)** per trovare il file con le variabili globali usate in Postman:
+2.  **Aprire Postman.**
+3.  **Creare un nuovo Workspace (molto consigliato ma non per forza necessario).**
+4.  **In alto a sinistra** sarà possibile cliccare su **"Import"**. Si aprirà una modale.
+5.  **Copiare il contenuto** del file `DB_Exam.postman_collection.json`.
+6.  **Tornare sulla modale di postman** e incollare il contenuto. 
+7.  **Ora ripetere lo stesso procedimento** con il file `workspace.postman_globals.json`.
+7.  **Postman creerà in automatico le chiamate API all'interno dell'applicativo** che saranno subito testabili (ovviamente con la business logic su docker avviata in precedenza).
 
 ## Licenza
 
@@ -258,7 +270,9 @@ Questo progetto è sviluppato per scopi didattici presso l'UNIMOL - Università 
 
 ---
 
-**⚠️ Nota di Sicurezza**: Per scopi didattici, tutte le `origins` sono impostate a `*` o `true`. In produzione, configurare appropriatamente CORS e altre misure di sicurezza.
+**⚠️ Nota di Sicurezza**: Per scopi didattici, tutte le `origins` sono impostate a `*` o `true`. In produzione, configurare appropriatamente CORS e altre misure di sicurezza. 
+
+Inoltre è possibile [trovare qui](./docs/this_should_not_exist.txt) il file `.env` chiamato `this_should_not_exits.txt` che comprende tutte le variabili d'ambiente per l'applicativo. Il file in questione può essere spostato nella root del progetto e rinominato direttamente `.env` oppure il suo contenuto va incollato nel file `.env.example` e poi rinominato `.env`.
 
 ---
 

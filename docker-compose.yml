@@ -1,6 +1,7 @@
 services:
   # PostgreSQL per User Service
   postgres:
+    container_name: DB-postgres
     image: postgres:15
     environment:
       POSTGRES_USER: admin
@@ -18,6 +19,7 @@ services:
 
   # MongoDB per Post Service
   mongodb:
+    container_name: DB-mongodb
     image: mongo:7
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
@@ -35,6 +37,7 @@ services:
 
   # Neo4j per Social Graph Service
   neo4j:
+    container_name: DB-neo4j
     image: neo4j:5
     environment:
       NEO4J_AUTH: neo4j/password
@@ -69,6 +72,7 @@ services:
 
   # Redis per Feed Service
   redis:
+    container_name: DB-redis
     image: redis:7-alpine
     ports:
       - '6379:6379'
@@ -82,6 +86,7 @@ services:
 
   # Nest.js - Api Gateway
   api-gateway:
+    container_name: api-gateway
     build:
       context: .
       dockerfile: apps/api-gateway/Dockerfile
@@ -110,6 +115,7 @@ services:
 
   # Nest.js - User Service
   user-service:
+    container_name: user-service
     build:
       context: .
       dockerfile: apps/user-service/Dockerfile
@@ -124,6 +130,7 @@ services:
 
   # Nest.js - Post Service
   post-service:
+    container_name: post-service
     build:
       context: .
       dockerfile: apps/post-service/Dockerfile
@@ -138,6 +145,7 @@ services:
 
   # Nest.js - Feed Service
   feed-service:
+    container_name: feed-service
     build:
       context: .
       dockerfile: apps/feed-service/Dockerfile
@@ -152,6 +160,7 @@ services:
 
   # Nest.js - Social Graph Service
   social-graph-service:
+    container_name: social-graph-service
     build:
       context: .
       dockerfile: apps/social-graph-service/Dockerfile

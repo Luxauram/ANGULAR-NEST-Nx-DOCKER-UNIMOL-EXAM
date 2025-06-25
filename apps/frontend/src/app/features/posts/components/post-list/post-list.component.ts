@@ -4,22 +4,33 @@ import { Post } from '../../../../models/post.model';
 import { User } from '../../../../models/user.model';
 import { PostService } from '../../../../services/post/post.service';
 import { AvatarComponent } from '../../../../shared/components/user/avatar.component';
+import { LikeButtonComponent } from '../../../../shared/ui/buttons/like-button.component';
+import { CommentButtonComponent } from '../../../../shared/ui/buttons/comment-button.component';
+import { ShareButtonComponent } from '../../../../shared/ui/buttons/share-button.component';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
-  imports: [CommonModule, AvatarComponent],
+  imports: [
+    CommonModule, 
+    AvatarComponent, 
+    LikeButtonComponent, 
+    CommentButtonComponent, 
+    ShareButtonComponent
+  ],
   templateUrl: './post-list.component.html',
 })
 export class PostListComponent implements OnInit {
   @Input() posts: Post[] = [];
-  @Input() user: User | null = null; // Aggiungiamo l'input per l'utente
+  @Input() user: User | null = null;
   @Input() isLoading = false;
   @Input() hasMorePosts = false;
   @Input() currentUserId?: string;
   @Output() loadMorePosts = new EventEmitter<number>();
   @Output() postLiked = new EventEmitter<string>();
   @Output() postDeleted = new EventEmitter<string>();
+  @Output() postShared = new EventEmitter<string>();
+  @Output() commentClicked = new EventEmitter<string>();
 
   currentPage = 1;
 
@@ -58,53 +69,30 @@ export class PostListComponent implements OnInit {
     }
   }
 
-  // Implementazione corretta del like usando l'API
-  likePost(postId: string): void {
-    this.postService.toggleLike(postId).subscribe({
-      next: (response) => {
-        console.log('Post liked/unliked:', response);
-        this.postLiked.emit(postId);
-        // Aggiorna il post nella lista locale se necessario
-        const post = this.posts.find((p) => p.id === postId);
-        if (post) {
-          // Assumendo che la risposta contenga il nuovo stato del like
-          if (response.liked !== undefined) {
-            post.liked = response.liked;
-            post.likesCount = response.likesCount ?? post.likesCount ?? 0;
-          }
-        }
-      },
-      error: (error) => {
-        console.error('Error toggling like:', error);
-      },
-    });
+  // Gestisce l'evento di like dal componente figlio
+  onLikeToggled(event: { postId: string; liked: boolean; likesCount: number }): void {
+    // Aggiorna il post nella lista locale
+    const post = this.posts.find((p) => p.id === event.postId);
+    if (post) {
+      post.liked = event.liked;
+      post.likesCount = event.likesCount;
+    }
+
+    // Propaga l'evento al componente padre
+    this.postLiked.emit(event.postId);
   }
 
-  // Metodo per unlike esplicito (se necessario)
-  unlikePost(postId: string): void {
-    this.postService.unlikePost(postId).subscribe({
-      next: (response) => {
-        console.log('Post unliked:', response);
-        this.postLiked.emit(postId);
-        const post = this.posts.find((p) => p.id === postId);
-        if (post) {
-          post.liked = false;
-          // Gestisce il caso in cui likesCount sia undefined
-          const currentLikes = post.likesCount ?? 0;
-          if (currentLikes > 0) {
-            post.likesCount = currentLikes - 1;
-          } else {
-            post.likesCount = 0;
-          }
-        }
-      },
-      error: (error) => {
-        console.error('Error unliking post:', error);
-      },
-    });
+  // Gestisce l'evento di click sui commenti
+  onCommentClicked(postId: string): void {
+    this.commentClicked.emit(postId);
   }
 
-  // Metodo per eliminare post
+  // Gestisce l'evento di condivisione
+  onPostShared(postId: string): void {
+    this.postShared.emit(postId);
+  }
+
+  // Metodo per eliminare post (rimane invariato)
   deletePost(postId: string): void {
     if (confirm('Sei sicuro di voler eliminare questo post?')) {
       this.postService.deletePost(postId).subscribe({
@@ -121,22 +109,6 @@ export class PostListComponent implements OnInit {
     }
   }
 
-  // Incrementa contatore commenti
-  incrementComments(postId: string): void {
-    this.postService.incrementComments(postId).subscribe({
-      next: (response) => {
-        console.log('Comments incremented:', response);
-        const post = this.posts.find((p) => p.id === postId);
-        if (post) {
-          post.commentsCount = (post.commentsCount ?? 0) + 1;
-        }
-      },
-      error: (error) => {
-        console.error('Error incrementing comments:', error);
-      },
-    });
-  }
-
   loadMore(): void {
     this.currentPage++;
     this.loadMorePosts.emit(this.currentPage);
@@ -145,12 +117,6 @@ export class PostListComponent implements OnInit {
   // Metodo helper per controllare se l'utente può modificare/eliminare il post
   canModifyPost(post: Post, currentUserId?: string): boolean {
     return post.userId === currentUserId;
-  }
-
-  // Metodo per formattare i tag
-  formatTags(tags?: string[]): string {
-    if (!tags || tags.length === 0) return '';
-    return tags.join(', ');
   }
 
   // Metodi helper per gestire valori undefined nei template
