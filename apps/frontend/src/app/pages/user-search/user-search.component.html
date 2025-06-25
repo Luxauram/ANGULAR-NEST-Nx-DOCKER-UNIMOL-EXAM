@@ -1,0 +1,196 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Search Section -->
+    <div class="space-y-6">
+      <!-- Search Header -->
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Cerca Utenti</h2>
+          <p class="text-sm text-gray-500">
+            Trova e segui nuovi utenti interessanti
+          </p>
+        </div>
+      </div>
+
+      <!-- Search Input -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="relative max-w-lg">
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <svg
+              class="h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
+            </svg>
+          </div>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="onSearchInput($event)"
+            placeholder="Cerca per nome utente o nome..."
+            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+          />
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="flex justify-center py-12">
+        <div class="flex items-center space-x-2">
+          <svg
+            class="animate-spin h-6 w-6 text-indigo-600"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <span class="text-gray-500">Ricerca in corso...</span>
+        </div>
+      </div>
+
+      <!-- Empty State - No search query -->
+      <div
+        *ngIf="!isLoading && searchQuery.length === 0"
+        class="text-center py-12"
+      >
+        <div class="mx-auto h-24 w-24 text-gray-400 mb-4">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            ></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">
+          Inizia la tua ricerca
+        </h3>
+        <p class="text-gray-500">
+          Digita un nome utente o un nome per trovare persone interessanti da
+          seguire
+        </p>
+      </div>
+
+      <!-- Empty State - No results -->
+      <div
+        *ngIf="!isLoading && searchQuery.length > 0 && users.length === 0"
+        class="text-center py-12"
+      >
+        <div class="mx-auto h-24 w-24 text-gray-400 mb-4">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">
+          Nessun risultato trovato
+        </h3>
+        <p class="text-gray-500">
+          Nessun utente trovato per "<span class="font-medium">{{
+            searchQuery
+          }}</span
+          >". Prova con un altro termine di ricerca.
+        </p>
+      </div>
+
+      <!-- Results -->
+      <div *ngIf="!isLoading && users.length > 0" class="space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-medium text-gray-900">
+            Risultati della ricerca
+          </h3>
+          <span class="text-sm text-gray-500">
+            {{ users.length }} utente{{ users.length === 1 ? '' : 'i' }}
+            {{ users.length === 1 ? 'trovato' : 'trovati' }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            *ngFor="let user of users"
+            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            tabindex="0"
+            role="button"
+            (click)="viewUserProfile(user.id)"
+            (keyup.enter)="viewUserProfile(user.id)"
+            (keyup.space)="viewUserProfile(user.id)"
+          >
+            <!-- User Avatar -->
+            <div class="flex items-center space-x-4 mb-4">
+              <img
+                [src]="getUserAvatar(user)"
+                [alt]="user.username"
+                (error)="onAvatarError($event)"
+                class="h-12 w-12 rounded-full object-cover ring-2 ring-gray-100"
+              />
+              <div class="flex-1 min-w-0">
+                <h4 class="text-lg font-semibold text-gray-900 truncate">
+                  {{ user.username }}
+                </h4>
+                <p
+                  *ngIf="user.firstName || user.lastName"
+                  class="text-sm text-gray-500 truncate"
+                >
+                  {{ user.firstName }} {{ user.lastName }}
+                </p>
+              </div>
+            </div>
+
+            <!-- User Bio -->
+            <div *ngIf="user.bio" class="mb-4">
+              <p class="text-sm text-gray-600 line-clamp-3">
+                {{ user.bio }}
+              </p>
+            </div>
+
+            <!-- User Meta -->
+            <div
+              class="flex items-center justify-between text-xs text-gray-400"
+            >
+              <span> Membro dal {{ formatDate(user.createdAt) }} </span>
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                ></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -34,27 +34,46 @@ import { PostService } from '../../../services/post/post.service';
 })
 export class LikeButtonComponent {
   @Input() postId!: string;
-  @Input() likesCount: number = 0;
-  @Input() isLiked: boolean = false;
-  @Output() likeToggled = new EventEmitter<{ postId: string; liked: boolean; likesCount: number }>();
+  @Input() likesCount = 0;
+  @Input() isLiked = false;
+  @Output() likeToggled = new EventEmitter<{
+    postId: string;
+    liked: boolean;
+    likesCount: number;
+  }>();
 
   isLoading = false;
 
   constructor(private postService: PostService) {}
 
   onLikeClick(): void {
+    // FIX: Validazione postId
+    if (!this.postId || this.postId === 'undefined') {
+      console.error('❌ LikeButton: Invalid postId:', this.postId);
+      alert('Errore: ID post non valido');
+      return;
+    }
+
     if (this.isLoading) return;
 
+    console.log('❤️ Liking post with ID:', this.postId);
     this.isLoading = true;
 
-    this.postService.toggleLike(this.postId).subscribe({
+    // Usa il nuovo metodo toggleLike che passa lo stato attuale
+    this.postService.toggleLike(this.postId, this.isLiked).subscribe({
       next: (response) => {
         console.log('Post liked/unliked:', response);
-        
-        // Aggiorna lo stato locale
-        const newLiked = response.liked !== undefined ? response.liked : !this.isLiked;
-        const newLikesCount = response.likesCount !== undefined ? response.likesCount : 
-          (newLiked ? this.likesCount + 1 : Math.max(0, this.likesCount - 1));
+
+        // Aggiorna lo stato locale basandosi sulla risposta del server
+        // Se il server non restituisce questi campi, usa la logica locale
+        const newLiked =
+          response.liked !== undefined ? response.liked : !this.isLiked;
+        const newLikesCount =
+          response.likesCount !== undefined
+            ? response.likesCount
+            : newLiked
+            ? this.likesCount + 1
+            : Math.max(0, this.likesCount - 1);
 
         this.isLiked = newLiked;
         this.likesCount = newLikesCount;
@@ -63,7 +82,7 @@ export class LikeButtonComponent {
         this.likeToggled.emit({
           postId: this.postId,
           liked: this.isLiked,
-          likesCount: this.likesCount
+          likesCount: this.likesCount,
         });
 
         this.isLoading = false;

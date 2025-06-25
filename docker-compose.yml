@@ -178,6 +178,7 @@ services:
 
   # Angular - Frontend
   frontend:
+    container_name: frontend
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile

@@ -3,7 +3,7 @@ import { HomeComponent } from './pages/home/home.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { UserProfileComponent } from './features/users/components/user-profile/user-profile.component';
 import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
-import { UserSearchComponent } from './features/users/components/user-search/user-search.component';
+import { UserSearchComponent } from './pages/user-search/user-search.component';
 import { ProfileUpdateComponent } from './pages/profile-update/profile-update.component';
 import { AboutComponent } from './pages/about/about.component';
 import { FeedExploreComponent } from './pages/feed-explore/feed-explore.component';

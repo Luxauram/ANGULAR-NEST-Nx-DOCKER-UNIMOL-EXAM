@@ -144,6 +144,12 @@ export class ProfileComponent implements OnInit {
       next: (posts) => {
         console.log('📝 Posts loaded:', posts);
         this.userPosts = posts;
+
+        // Ordina i post per data (più recenti prima)
+        this.userPosts.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       },
       error: (error) => {
         console.error('❌ Error loading user posts:', error);
@@ -189,6 +195,71 @@ export class ProfileComponent implements OnInit {
         this.isLoading = false;
       },
     });
+  }
+
+  // NUOVO: Handler per la cancellazione dei post
+  onPostDeleted(postId: string): void {
+    console.log('🗑️ Profile received post deleted event:', postId);
+
+    // Rimuovi il post dall'array userPosts
+    const initialCount = this.userPosts.length;
+    this.userPosts = this.userPosts.filter((post) => post.id !== postId);
+    const finalCount = this.userPosts.length;
+
+    console.log(
+      `✅ Post removed from userPosts: ${initialCount} -> ${finalCount}`
+    );
+
+    // OPZIONALE: Ricarica i post dal server per assicurarsi che sia tutto sincronizzato
+    // Questo è utile se ci sono dubbi sulla sincronizzazione
+    if (finalCount === initialCount) {
+      console.warn(
+        '⚠️ Post not found in local array, reloading from server...'
+      );
+      this.reloadUserPosts();
+    }
+  }
+
+  private reloadUserPosts(): void {
+    if (!this.user) return;
+
+    console.log('🔄 Reloading user posts from server...');
+
+    this.postService.getUserPosts(this.user.id).subscribe({
+      next: (posts) => {
+        console.log('📝 Posts reloaded:', posts);
+        this.userPosts = posts;
+
+        // Riordina i post per data (più recenti prima)
+        this.userPosts.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      },
+      error: (error) => {
+        console.error('❌ Error reloading user posts:', error);
+      },
+    });
+  }
+
+  // NUOVO: Handler per i like dei post (opzionale, per consistenza)
+  onPostLiked(postId: string): void {
+    console.log('❤️ Profile received post liked event:', postId);
+    // Il PostListComponent gestisce già l'aggiornamento locale del like
+    // Qui potresti aggiungere logica aggiuntiva se necessario
+  }
+
+  // NUOVO: Handler per i commenti (opzionale, per consistenza)
+  onCommentClicked(postId: string): void {
+    console.log('💬 Profile received comment clicked event:', postId);
+    // Qui potresti navigare alla pagina del post o aprire un modal commenti
+    // this.router.navigate(['/post', postId]);
+  }
+
+  // NUOVO: Handler per la condivisione (opzionale, per consistenza)
+  onPostShared(postId: string): void {
+    console.log('📤 Profile received post shared event:', postId);
+    // Qui potresti aggiungere logica per trackare le condivisioni
   }
 
   refreshUserProfile(): void {

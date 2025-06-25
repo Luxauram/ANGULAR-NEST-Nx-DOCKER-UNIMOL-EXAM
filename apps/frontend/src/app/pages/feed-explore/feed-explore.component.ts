@@ -104,7 +104,7 @@ export class FeedExploreComponent implements OnInit {
   }
 
   /**
-   * Mette/toglie like a un post
+   * Mette/toglie like a un post - LOGICA CORRETTA
    */
   toggleLike(post: Post): void {
     if (!this.currentUserId) {
@@ -112,31 +112,38 @@ export class FeedExploreComponent implements OnInit {
       return;
     }
 
-    const isCurrentlyLiked = post.liked;
+    console.log(
+      `🔄 Toggling like for post ${post.id}, currently liked: ${post.liked}`
+    );
 
-    if (isCurrentlyLiked) {
-      this.postService.unlikePost(post.id).subscribe({
-        next: () => {
-          post.liked = false;
-          post.likesCount = Math.max(0, (post.likesCount || 0) - 1);
-          console.log(`✅ Unliked post: ${post.id}`);
-        },
-        error: (error) => {
-          console.error('❌ Error unliking post:', error);
-        },
-      });
-    } else {
-      this.postService.toggleLike(post.id).subscribe({
-        next: () => {
-          post.liked = true;
-          post.likesCount = (post.likesCount || 0) + 1;
-          console.log(`✅ Liked post: ${post.id}`);
-        },
-        error: (error) => {
-          console.error('❌ Error liking post:', error);
-        },
-      });
-    }
+    // Usa il nuovo metodo toggleLike che gestisce automaticamente like/unlike
+    this.postService.toggleLike(post.id, post.liked || false).subscribe({
+      next: (response) => {
+        console.log('✅ Like toggled successfully:', response);
+
+        // Aggiorna lo stato locale basandosi sulla risposta del server
+        // Se il server non restituisce questi campi, usa la logica locale
+        const newLiked =
+          response.liked !== undefined ? response.liked : !post.liked;
+        const newLikesCount =
+          response.likesCount !== undefined
+            ? response.likesCount
+            : newLiked
+            ? (post.likesCount || 0) + 1
+            : Math.max(0, (post.likesCount || 0) - 1);
+
+        post.liked = newLiked;
+        post.likesCount = newLikesCount;
+
+        console.log(
+          `✅ Post ${post.id} updated: liked=${newLiked}, count=${newLikesCount}`
+        );
+      },
+      error: (error) => {
+        console.error('❌ Error toggling like:', error);
+        // Non aggiornare lo stato locale in caso di errore
+      },
+    });
   }
 
   /**

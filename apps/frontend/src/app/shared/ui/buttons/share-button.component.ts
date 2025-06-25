@@ -41,8 +41,10 @@ export class ShareButtonComponent {
   private handleSharePost(): void {
     const shareData = {
       title: this.postTitle || 'Post interessante',
-      text: this.postContent 
-        ? `${this.postContent.substring(0, 100)}${this.postContent.length > 100 ? '...' : ''}` 
+      text: this.postContent
+        ? `${this.postContent.substring(0, 100)}${
+            this.postContent.length > 100 ? '...' : ''
+          }`
         : 'Guarda questo post interessante!',
       url: `${window.location.origin}/post/${this.postId}`,
     };
@@ -70,7 +72,11 @@ export class ShareButtonComponent {
     }
   }
 
-  private openShareDialog(shareData: { title: string; text: string; url: string }): void {
+  private openShareDialog(shareData: {
+    title: string;
+    text: string;
+    url: string;
+  }): void {
     const shareUrls = {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
         shareData.url
@@ -88,7 +94,7 @@ export class ShareButtonComponent {
 
     // Apri WhatsApp come default, oppure puoi creare un dialog per scegliere
     window.open(shareUrls.whatsapp, '_blank', 'width=600,height=400');
-    
+
     // Emetti l'evento di condivisione
     this.postShared.emit(this.postId);
   }

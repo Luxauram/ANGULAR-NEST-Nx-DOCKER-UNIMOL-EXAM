@@ -30,14 +30,14 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class CommentButtonComponent {
   @Input() postId!: string;
-  @Input() commentsCount: number = 0;
+  @Input() commentsCount = 0;
   @Output() commentClicked = new EventEmitter<string>();
 
   constructor(private toastr: ToastrService) {}
 
   onCommentClick(event: Event): void {
     event.preventDefault();
-    
+
     this.toastr.info(
       'Questa funzionalità non è ancora stata implementata',
       'Feature non implementata',

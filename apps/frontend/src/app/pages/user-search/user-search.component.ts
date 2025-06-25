@@ -9,16 +9,15 @@ import {
   switchMap,
   of,
 } from 'rxjs';
-import { User } from '../../../../models/user.model';
-import { ImageService } from '../../../../services/user/image.service';
-import { UserService } from '../../../../services/user/user.service';
+import { User } from '../../models/user.model';
+import { ImageService } from '../../services/user/image.service';
+import { UserService } from '../../services/user/user.service';
 
 @Component({
   selector: 'app-user-search',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './user-search.component.html',
-  styleUrls: ['./user-search.component.css'],
 })
 export class UserSearchComponent implements OnInit, OnDestroy {
   searchQuery = '';

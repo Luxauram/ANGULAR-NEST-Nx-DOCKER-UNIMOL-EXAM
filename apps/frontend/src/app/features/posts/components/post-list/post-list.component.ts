@@ -2,21 +2,22 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Post } from '../../../../models/post.model';
 import { User } from '../../../../models/user.model';
-import { PostService } from '../../../../services/post/post.service';
 import { AvatarComponent } from '../../../../shared/components/user/avatar.component';
 import { LikeButtonComponent } from '../../../../shared/ui/buttons/like-button.component';
 import { CommentButtonComponent } from '../../../../shared/ui/buttons/comment-button.component';
 import { ShareButtonComponent } from '../../../../shared/ui/buttons/share-button.component';
+import { DeleteButtonComponent } from '../../../../shared/ui/buttons/delete-button.component';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
   imports: [
-    CommonModule, 
-    AvatarComponent, 
-    LikeButtonComponent, 
-    CommentButtonComponent, 
-    ShareButtonComponent
+    CommonModule,
+    AvatarComponent,
+    LikeButtonComponent,
+    CommentButtonComponent,
+    ShareButtonComponent,
+    DeleteButtonComponent,
   ],
   templateUrl: './post-list.component.html',
 })
@@ -34,9 +35,17 @@ export class PostListComponent implements OnInit {
 
   currentPage = 1;
 
-  constructor(private postService: PostService) {}
-
   ngOnInit(): void {
+    // DEBUG: Controlla la struttura dei post
+    console.log('🔍 Posts structure:', this.posts);
+    this.posts.forEach((post) => {
+      console.log('🔍 Post:', {
+        id: post.id,
+        _id: post.id,
+        title: post.title || post.content?.substring(0, 50),
+      });
+    });
+
     // Ordina i post per data (più recenti prima)
     this.posts.sort(
       (a, b) =>
@@ -45,7 +54,10 @@ export class PostListComponent implements OnInit {
   }
 
   trackByPostId(index: number, post: Post): string {
-    return post.id;
+    // FIX: Usa _id se id non esiste
+    const postId = post.id || post.id;
+    console.log('🔍 trackByPostId:', { postId, post });
+    return postId;
   }
 
   formatDate(dateString: string | Date): string {
@@ -70,12 +82,28 @@ export class PostListComponent implements OnInit {
   }
 
   // Gestisce l'evento di like dal componente figlio
-  onLikeToggled(event: { postId: string; liked: boolean; likesCount: number }): void {
+  onLikeToggled(event: {
+    postId: string;
+    liked: boolean;
+    likesCount: number;
+  }): void {
+    console.log('📍 Post list received like toggle event:', event);
+
     // Aggiorna il post nella lista locale
     const post = this.posts.find((p) => p.id === event.postId);
     if (post) {
+      const wasLiked = post.liked;
+      const oldCount = post.likesCount;
+
+      // Aggiorna con i nuovi valori
       post.liked = event.liked;
       post.likesCount = event.likesCount;
+
+      console.log(
+        `📍 Post ${event.postId} updated: ${wasLiked} -> ${event.liked}, count: ${oldCount} -> ${event.likesCount}`
+      );
+    } else {
+      console.warn('📍 Post not found in local list:', event.postId);
     }
 
     // Propaga l'evento al componente padre
@@ -92,20 +120,24 @@ export class PostListComponent implements OnInit {
     this.postShared.emit(postId);
   }
 
-  // Metodo per eliminare post (rimane invariato)
-  deletePost(postId: string): void {
-    if (confirm('Sei sicuro di voler eliminare questo post?')) {
-      this.postService.deletePost(postId).subscribe({
-        next: () => {
-          console.log('Post deleted:', postId);
-          this.postDeleted.emit(postId);
-          // Rimuovi il post dalla lista locale
-          this.posts = this.posts.filter((p) => p.id !== postId);
-        },
-        error: (error) => {
-          console.error('Error deleting post:', error);
-        },
-      });
+  // Gestisce l'evento di eliminazione dal componente delete button
+  onPostDeleted(event: {
+    postId: string;
+    success: boolean;
+    error?: string;
+  }): void {
+    console.log('🗑️ Post list received delete event:', event);
+
+    if (event.success) {
+      // Rimuovi il post dalla lista locale
+      this.posts = this.posts.filter((p) => p.id !== event.postId);
+      console.log('✅ Post removed from local list:', event.postId);
+
+      // Propaga l'evento al componente padre
+      this.postDeleted.emit(event.postId);
+    } else {
+      console.error('❌ Delete failed:', event.error);
+      // L'errore è già gestito nel DeleteButtonComponent
     }
   }
 
@@ -130,5 +162,13 @@ export class PostListComponent implements OnInit {
 
   isPostLiked(post: Post): boolean {
     return post.liked ?? false;
+  }
+
+  getPostId(post: Post): string {
+    const postId = post.id || post._id || '';
+    if (!postId) {
+      console.error('❌ Post without ID:', post);
+    }
+    return postId;
   }
 }
